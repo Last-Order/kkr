@@ -1,0 +1,31 @@
+{
+  "name": "kkr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc --newLine lf"
+  },
+  "bin": {
+    "kkr": "./dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Last-Order/kkr.git"
+  },
+  "author": "Eridanus Sora",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/Last-Order/kkr/issues"
+  },
+  "homepage": "https://github.com/Last-Order/kkr#readme",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "erii": "^1.2.6",
+    "fast-xml-parser": "^3.16.0",
+    "shua": "^1.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^13.11.1"
+  }
+}
