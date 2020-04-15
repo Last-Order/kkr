@@ -1,0 +1,1 @@
+export const CANT_PARSE_VIDEO_URL = '无法解析视频地址';

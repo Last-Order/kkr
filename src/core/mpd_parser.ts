@@ -32,7 +32,7 @@ const parseMpd = (mpdStr): ParseResult => {
     for (const videoRepresentation of videoRepresentations) {
         const track: Track = {
             id: parseInt(videoRepresentation.attr['@_id']),
-            bitrate: parseInt(videoRepresentation.attr['@_bitrate']),
+            bitrate: parseInt(videoRepresentation.attr['@_bandwidth']),
             urls: []
         };
         const baseUrl = videoRepresentation.BaseURL;
@@ -47,7 +47,7 @@ const parseMpd = (mpdStr): ParseResult => {
     for (const audioRepresentation of audioRepresentations) {
         const track: Track = {
             id: parseInt(audioRepresentation.attr['@_id']),
-            bitrate: parseInt(audioRepresentation.attr['@_bitrate']),
+            bitrate: parseInt(audioRepresentation.attr['@_bandwidth']),
             urls: []
         };
         const baseUrl = audioRepresentation.BaseURL;
@@ -58,6 +58,8 @@ const parseMpd = (mpdStr): ParseResult => {
         }
         result.audioTracks.push(track);
     }
+    result.videoTracks = result.videoTracks.sort((a, b) => b.bitrate - a.bitrate);
+    result.audioTracks = result.audioTracks.sort((a, b) => b.bitrate - a.bitrate);
     return result;
 }
 

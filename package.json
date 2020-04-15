@@ -21,9 +21,10 @@
   "homepage": "https://github.com/Last-Order/kkr#readme",
   "dependencies": {
     "axios": "^0.19.2",
+    "cli-progress": "^3.7.0",
     "erii": "^1.2.6",
     "fast-xml-parser": "^3.16.0",
-    "shua": "^1.1.2"
+    "shua": "^1.1.5"
   },
   "devDependencies": {
     "@types/node": "^13.11.1"
