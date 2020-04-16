@@ -8,6 +8,7 @@ import parseMpd from "./mpd_parser";
 import download from "../utils/download_files";
 import { VideoMuxer, VideoTrack, AudioTrack } from "../utils/video_muxer";
 import mergeFiles from "../utils/merge_files";
+import deleteDirectory from "../utils/delete_directory";
 
 export class DownloadError extends Error { }
 
@@ -90,7 +91,8 @@ class Downloader extends EventEmitter {
         const videoMuxer = new VideoMuxer(this.outputFilename);
         videoMuxer.addVideoTracks(new VideoTrack({ path: path.resolve(this.workDirectoryName, './video_download/video.mp4') }));
         videoMuxer.addAudioTracks(new AudioTrack({ path: path.resolve(this.workDirectoryName, './audio_download/audio.mp4') }));
-        videoMuxer.on('success', () => {
+        videoMuxer.on('success', async () => {
+            await deleteDirectory(this.workDirectoryName);
             process.exit();
         });
         videoMuxer.run();
