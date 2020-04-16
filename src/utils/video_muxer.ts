@@ -68,7 +68,7 @@ class VideoMuxer extends EventEmitter {
         if (this.outputPath.endsWith('.mkv')) {
             command += `-c copy -reserve_index_space 200k "${this.outputPathName}${this.outputPathExt}"`;
         } else if (this.outputPath.endsWith('.mp4')) {
-            command += `-c copy -movflags faststart "${this.outputPath}${this.outputPathExt}"`;
+            command += `-c copy -movflags faststart "${this.outputPathName}${this.outputPathExt}"`;
         }
         this.commandExecuter.on('stderr', (data) => {
             this.emit('stderr', data);

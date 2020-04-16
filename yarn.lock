@@ -278,10 +278,10 @@ next-tick@~1.0.0:
   resolved "https://registry.yarnpkg.com/next-tick/-/next-tick-1.0.0.tgz#ca86d1fe8828169b0120208e3dc8424b9db8342c"
   integrity sha1-yobR/ogoFpsBICCOPchCS524NCw=
 
-shua@^1.1.5:
-  version "1.1.5"
-  resolved "https://registry.yarnpkg.com/shua/-/shua-1.1.5.tgz#96f43cc1eb3951ce3bf38c7df72c4f01a8b108d2"
-  integrity sha512-a4pVIeTEkQCo7Eky6n2bMn9Uos5hn+veOdteDTWYpa6qBNg2iQtV51aQ2ndzEIkhdb8iXXiyGcIcSbvfQgYkvw==
+shua@^1.1.7:
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/shua/-/shua-1.1.7.tgz#2458d8f92c18c895980d529f59ac1f76415544e2"
+  integrity sha512-zFprDMtVhesZHYQG/5/ahgUaf2lYBlNsf+57N9F/1Kb5VXCMmB6b/3Dw9Z5/1r7RJpfw/XCNZsrHgWa3rVz4SA==
   dependencies:
     axios "^0.19.1"
     erii "^1.2.6"

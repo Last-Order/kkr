@@ -18,6 +18,8 @@ export interface DownloaderOptions {
 
 class Downloader extends EventEmitter {
     videoUrl: string;
+    format: number[];
+
     videoId: string;
     videoChunkUrls: string[];
     audioChunkUrls: string[];
@@ -28,6 +30,9 @@ class Downloader extends EventEmitter {
     constructor({ videoUrl, format }: DownloaderOptions) {
         super();
         this.videoUrl = videoUrl;
+        if (format) {
+            this.format = format.split('+').map(f => parseInt(f));
+        }
     }
 
     async download() {
@@ -59,10 +64,29 @@ class Downloader extends EventEmitter {
         this.audioChunkUrls = parseResult.audioTracks[0].urls;
         await download(this.videoChunkUrls, path.resolve(this.workDirectoryName, './video_download'));
         await download(this.audioChunkUrls, path.resolve(this.workDirectoryName, './audio_download'));
+        // Format selection
+        let selectedVideoTrack, selectedAudioTrack;
+        if (this.format) {
+            selectedVideoTrack = parseResult.videoTracks.find(track => this.format.includes(track.id));
+            selectedAudioTrack = parseResult.audioTracks.find(track => this.format.includes(track.id));
+        }
+        // If not selected, fallback to the best
+        if (!selectedVideoTrack) {
+            selectedVideoTrack = parseResult.videoTracks[0];
+        }
+        if (!selectedAudioTrack) {
+            selectedAudioTrack = parseResult.audioTracks[0];
+        }
         this.downloadedVideoChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, './video_download'));
         this.downloadedAudioChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, './audio_download'));
-        await mergeFiles(this.downloadedVideoChunkFiles, path.resolve(this.workDirectoryName, './video_download/video.mp4'));
-        await mergeFiles(this.downloadedAudioChunkFiles, path.resolve(this.workDirectoryName, './audio_download/audio.mp4'));
+        await mergeFiles(
+            this.downloadedVideoChunkFiles.map(f => path.resolve(this.workDirectoryName, './video_download', f)), 
+            path.resolve(this.workDirectoryName, './video_download/video.mp4')
+        );
+        await mergeFiles(
+            this.downloadedAudioChunkFiles.map(f => path.resolve(this.workDirectoryName, './audio_download', f)), 
+            path.resolve(this.workDirectoryName, './audio_download/audio.mp4')
+        );
         const videoMuxer = new VideoMuxer(this.outputFilename);
         videoMuxer.addVideoTracks(new VideoTrack({ path: path.resolve(this.workDirectoryName, './video_download/video.mp4') }));
         videoMuxer.addAudioTracks(new AudioTrack({ path: path.resolve(this.workDirectoryName, './audio_download/audio.mp4') }));
