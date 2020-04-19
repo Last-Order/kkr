@@ -9,6 +9,7 @@ import { VideoMuxer, VideoTrack, AudioTrack } from "../utils/video_muxer";
 import mergeFiles from "../utils/merge_files";
 import deleteDirectory from "../utils/delete_directory";
 import selectFormat from "../utils/select_format";
+import escapeFilename from "../utils/escape_filename";
 
 export class DownloadError extends Error { }
 
@@ -40,7 +41,7 @@ class Downloader extends EventEmitter {
             title,
             mpdUrl
         } = await YouTubeService.getVideoInfo(this.videoUrl);
-        this.outputFilename = title.replace(/[\/\*\\\:|\?<>]/ig, "") + '.mp4';
+        this.outputFilename = escapeFilename(`${title}.mp4`);
         const mpdStr = (await axios.get(mpdUrl)).data;
         const parseResult = parseMpd(mpdStr);
         // 创建工作目录
