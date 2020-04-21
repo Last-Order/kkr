@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import * as fs from 'fs';
 import * as path from 'path';
-import YouTubeService from "./services/youtube";
+import YouTubeService from "./services/api/youtube";
 import axios from 'axios';
 import parseMpd from "./mpd_parser";
 import download from "../utils/download_files";

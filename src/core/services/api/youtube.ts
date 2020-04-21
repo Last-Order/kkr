@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as ErrorMessages from '../messages/error';
+import * as ErrorMessages from '../../messages/error';
 
 export class ParseError extends Error { }
 class YouTubeService {

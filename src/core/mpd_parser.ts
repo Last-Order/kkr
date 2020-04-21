@@ -9,6 +9,7 @@ export interface Track {
 export interface ParseResult {
     videoTracks: Track[];
     audioTracks: Track[];
+    rawMpd: any;
 }
 
 const parseMpd = (mpdStr): ParseResult => {
@@ -19,7 +20,8 @@ const parseMpd = (mpdStr): ParseResult => {
     });
     const result: ParseResult = {
         videoTracks: [],
-        audioTracks: []
+        audioTracks: [],
+        rawMpd: mpd
     }
     const adaptationSets = mpd.MPD.Period.AdaptationSet;
     const videoAdaptation = adaptationSets.find(

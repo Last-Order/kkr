@@ -7,7 +7,11 @@
         "sourceMap": true,
         "lib": ["es7", "esnext"],
         "experimentalDecorators": true,
-        "newLine": "LF"
+        "newLine": "LF",
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["src/*"]
+        }
     },
     "include": [
         "src/**/*"
