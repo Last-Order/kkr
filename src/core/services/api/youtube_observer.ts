@@ -7,6 +7,11 @@ import sleep from "@/utils/sleep";
 
 export class NetworkError extends Error {}
 
+export interface ConnectResult {
+    mpdUrl: string;
+    title: string;
+}
+
 class YouTubeObserver extends EventEmitter {
     videoUrl: string;
     mpdUrl: string;
@@ -23,21 +28,22 @@ class YouTubeObserver extends EventEmitter {
         }
     }
 
-    async connect() {
+    async connect(): Promise<ConnectResult> {
         // Get Video Info
         const { mpdUrl, title } = await YouTubeService.getVideoInfo(this.videoUrl);
         this.mpdUrl = mpdUrl;
+        this.cycling();
         return { mpdUrl, title };
     }
 
-    async disconnect() {
+    async disconnect(): Promise<void> {
         this.stopFlag = true;
     }
 
     async cycling() {
         this.on('end', () => {
             this.stopFlag = true;
-        })
+        });
         while (!this.stopFlag) {
             try {
                 await this.getVideoChunks();
