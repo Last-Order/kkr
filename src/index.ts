@@ -3,6 +3,7 @@ import Erii from 'erii';
 import * as fs from 'fs';
 import * as path from 'path';
 import Downloader from './core/downloader';
+import LiveDownloader, { LiveDownloaderOptions } from './core/live_downloader';
 
 Erii.setMetaInfo({
     name: 'KKR',
@@ -16,10 +17,25 @@ Erii.bind({
         name: 'url',
         description: 'Video URL',
     }
-}, async (ctx, options) => {
-    const videoUrl = ctx.getArgument().toString();
-    const downloader = new Downloader({ videoUrl });
-    downloader.download();
+}, async (ctx, options: any) => {
+    if (options.live) {
+        const videoUrl = ctx.getArgument().toString();
+        const downloader = new LiveDownloader({
+            videoUrl,
+            ...options
+        });
+        downloader.start();
+    } else {
+        const videoUrl = ctx.getArgument().toString();
+        const downloader = new Downloader({ videoUrl });
+        downloader.download();
+    }
+});
+
+Erii.addOption({
+    name: ['live'],
+    command: 'download',
+    description: 'Download live'
 });
 
 Erii.default(() => {

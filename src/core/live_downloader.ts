@@ -1,12 +1,12 @@
-import YouTubeObserver from "@/core/services/api/youtube_observer";
+import YouTubeObserver from "./services/api/youtube_observer";
 import * as fs from 'fs';
 import * as path from 'path';
-import escapeFilename from "@/utils/escape_filename";
-import download from "@/utils/download_file";
+import escapeFilename from "../utils/escape_filename";
+import download from "../utils/download_file";
 import Logger, { ConsoleLogger } from "./services/logger";
-import mergeFiles from "@/utils/merge_files";
-import { VideoMuxer, VideoTrack, AudioTrack } from "@/utils/video_muxer";
-import deleteDirectory from "@/utils/delete_directory";
+import mergeFiles from "../utils/merge_files";
+import { VideoMuxer, VideoTrack, AudioTrack } from "../utils/video_muxer";
+import deleteDirectory from "../utils/delete_directory";
 
 interface Task {
     type: 'video' | 'audio';
@@ -16,19 +16,24 @@ interface Task {
     outputPath: string;
 }
 
+export interface LiveDownloaderOptions {
+    videoUrl: string;
+    format: string;
+}
+
 class LiveDownloader {
     observer: YouTubeObserver;
     logger: Logger;
     workDirectoryName: string;
     outputFilename: string;
-    unfinishedTasks: Task[];
-    finishedTasks: Task[];
-    dropedTasks: Task[];
+    unfinishedTasks: Task[] = [];
+    finishedTasks: Task[] = [];
+    dropedTasks: Task[] = [];
     maxRunningThreads = 16;
     nowRunningThreads = 0;
     stopFlag = false;
     finishFlag = false;
-    constructor({ videoUrl, format }) {
+    constructor({ videoUrl, format }: Partial<LiveDownloaderOptions>) {
         this.observer = new YouTubeObserver({
             videoUrl,
             format
@@ -41,6 +46,17 @@ class LiveDownloader {
         fs.mkdirSync(this.workDirectoryName);
         fs.mkdirSync(path.resolve(this.workDirectoryName, './video_download'));
         fs.mkdirSync(path.resolve(this.workDirectoryName, './audio_download'));
+        process.on("SIGINT", async () => {
+            if (!this.stopFlag) {
+                this.logger.info('Ctrl+C 被按下 等待当前任务下载完毕');
+                this.observer.disconnect();
+                this.stopFlag = true;
+                this.checkQueue();
+            } else {
+                this.logger.info('强制结束');
+                process.exit();
+            }
+        });
         const connectResult = await this.observer.connect();
         this.outputFilename = escapeFilename(`${connectResult.title}`);
         this.observer.on('new-video-chunks', (urls) => {
@@ -70,15 +86,11 @@ class LiveDownloader {
     }
 
     async checkQueue() {
-        if (this.stopFlag) {
-            // 转向
-            if (this.nowRunningThreads === 0 && this.unfinishedTasks.length === 0) {
-                if (!this.finishFlag) {
-                    this.finishFlag = true;
-                    this.beforeExit();
-                }
+        if (this.nowRunningThreads === 0 && this.unfinishedTasks.length === 0 && this.stopFlag) {
+            if (!this.finishFlag) {
+                this.finishFlag = true;
+                this.beforeExit();
             }
-            return;
         }
         if (this.nowRunningThreads >= this.maxRunningThreads) {
             return;
@@ -91,12 +103,14 @@ class LiveDownloader {
         // handle task
         try {
             await this.handleTask(task);
+            this.logger.debug(`${task.type}#${task.id} 已下载`);
             this.finishedTasks.push(task);
             this.nowRunningThreads--;
             this.checkQueue();
         } catch (e) {
             task.retry++;
             this.nowRunningThreads--;
+            this.logger.debug(`${task.type}#${task.id} 下载失败 稍后重试`);
             if (task.retry <= 10) {
                 this.unfinishedTasks.push(task);
             }
@@ -139,7 +153,7 @@ class LiveDownloader {
         } else {
             seqs.push([]);
             for (let i = 1; i <= finishedVideoTasks.length - 1; i++) {
-                if (finishedVideoTasks[i].id - finishedVideoTasks[i - 1].id !== 0) {
+                if (finishedVideoTasks[i].id - finishedVideoTasks[i - 1].id !== 1) {
                     seqs.push([]);
                 }
                 seqs[seqs.length - 1].push(finishedVideoTasks[i]);
@@ -165,12 +179,12 @@ class LiveDownloader {
             } catch (e) {
                 this.logger.error(`混流第 ${i + 1} 个输出文件失败`);
             }
-            this.logger.info(`清理临时文件`);
-            await deleteDirectory(path.resolve(this.workDirectoryName, './video_download'));
-            await deleteDirectory(path.resolve(this.workDirectoryName, './audio_download'));
-            this.logger.info('干完了');
-            process.exit();
         }
+        this.logger.info(`清理临时文件`);
+        await deleteDirectory(path.resolve(this.workDirectoryName, './video_download'));
+        await deleteDirectory(path.resolve(this.workDirectoryName, './audio_download'));
+        this.logger.info('干完了');
+        process.exit(0);
     }
 
     async handleTask(task: Task) {

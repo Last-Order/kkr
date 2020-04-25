@@ -8,10 +8,7 @@
         "lib": ["es7", "esnext"],
         "experimentalDecorators": true,
         "newLine": "LF",
-        "baseUrl": ".",
-        "paths": {
-            "@/*": ["src/*"]
-        }
+        "baseUrl": "."
     },
     "include": [
         "src/**/*"

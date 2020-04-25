@@ -1,9 +1,9 @@
 import { EventEmitter } from "events";
 import YouTubeService from "./youtube";
 import axios from 'axios';
-import parseMpd, { ParseResult } from "@/core/mpd_parser";
-import selectFormat from "@/utils/select_format";
-import sleep from "@/utils/sleep";
+import parseMpd, { ParseResult } from "../../mpd_parser";
+import selectFormat from "../../../utils/select_format";
+import sleep from "../../../utils/sleep";
 
 export class NetworkError extends Error {}
 
@@ -17,8 +17,8 @@ class YouTubeObserver extends EventEmitter {
     mpdUrl: string;
     format: string;
     timer: NodeJS.Timeout;
-    audioUrlFlags: boolean[];
-    videoUrlFlags: boolean[];
+    audioUrlFlags: boolean[] = [];
+    videoUrlFlags: boolean[] = [];
     stopFlag: boolean = false;
     constructor({ videoUrl, format }) {
         super();
@@ -49,6 +49,7 @@ class YouTubeObserver extends EventEmitter {
                 await this.getVideoChunks();
                 await sleep(8000);
             } catch (e) {
+                console.log(e);
                 console.log("获取MPD列表失败");
                 await sleep(1500);
             }
