@@ -4,7 +4,7 @@ import axios from 'axios';
 const download = async (url, dest, { timeout }): Promise<void> => {
     const CancelToken = axios.CancelToken;
     const source = CancelToken.source();
-    setTimeout(() => {
+    let timer = setTimeout(() => {
         source.cancel();
     }, timeout || 60000);
     const response = await axios({
@@ -13,6 +13,7 @@ const download = async (url, dest, { timeout }): Promise<void> => {
         responseType: 'arraybuffer',
         cancelToken: source.token,
     });
+    clearTimeout(timer);
     return fs.writeFileSync(dest, response.data);
 }
 

@@ -8,7 +8,7 @@ const exec = require('child_process').exec;
 export default class CommandExecuter extends EventEmitter {
     run(command, { output = ['stdout', 'stderr'] } = {}) {
         const child = exec(command, {
-            encoding: 'binary'
+            encoding: 'binary',
         });
         this.emit('start', child);
         if (output.includes('stdout')) {
@@ -29,6 +29,7 @@ export default class CommandExecuter extends EventEmitter {
             } else {
                 this.emit('fail', child);
             }
+            child.unref();
         });
     }
 }

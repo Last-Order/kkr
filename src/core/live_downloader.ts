@@ -7,7 +7,6 @@ import Logger, { ConsoleLogger } from "./services/logger";
 import mergeFiles from "../utils/merge_files";
 import { VideoMuxer, VideoTrack, AudioTrack } from "../utils/video_muxer";
 import deleteDirectory from "../utils/delete_directory";
-
 interface Task {
     type: 'video' | 'audio';
     url: string;
@@ -100,6 +99,7 @@ class LiveDownloader {
         }
         this.nowRunningThreads++;
         const task = this.unfinishedTasks.shift();
+        this.checkQueue();
         // handle task
         try {
             await this.handleTask(task);
@@ -184,7 +184,8 @@ class LiveDownloader {
         await deleteDirectory(path.resolve(this.workDirectoryName, './video_download'));
         await deleteDirectory(path.resolve(this.workDirectoryName, './audio_download'));
         this.logger.info('干完了');
-        process.exit(0);
+        this.observer.disconnect();
+        process.exit();
     }
 
     async handleTask(task: Task) {

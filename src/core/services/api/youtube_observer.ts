@@ -61,12 +61,13 @@ class YouTubeObserver extends EventEmitter {
         try {
             const CancelToken = axios.CancelToken;
             const source = CancelToken.source();
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 source.cancel('Timeout');
             }, 15000);
             const mpdStr = (await axios.get(this.mpdUrl, {
                 cancelToken: source.token
             })).data;
+            clearTimeout(timer);
             parseResult = parseMpd(mpdStr);
         } catch (e) {
             throw new NetworkError("获取MPD列表失败");

@@ -27,6 +27,7 @@
     "shua": "^1.1.7"
   },
   "devDependencies": {
-    "@types/node": "^13.11.1"
+    "@types/node": "^13.11.1",
+    "wtfnode": "^0.8.1"
   }
 }
