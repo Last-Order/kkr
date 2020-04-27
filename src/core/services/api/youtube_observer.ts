@@ -4,6 +4,7 @@ import axios from 'axios';
 import parseMpd, { ParseResult } from "../../mpd_parser";
 import selectFormat from "../../../utils/select_format";
 import sleep from "../../../utils/sleep";
+import logger from "../logger";
 
 export class NetworkError extends Error {}
 
@@ -30,10 +31,19 @@ class YouTubeObserver extends EventEmitter {
 
     async connect(): Promise<ConnectResult> {
         // Get Video Info
-        const { mpdUrl, title } = await YouTubeService.getVideoInfo(this.videoUrl);
-        this.mpdUrl = mpdUrl;
-        this.cycling();
-        return { mpdUrl, title };
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                const { mpdUrl, title } = await YouTubeService.getVideoInfo(this.videoUrl);
+                this.mpdUrl = mpdUrl;
+                this.cycling();
+                return { mpdUrl, title };
+            } catch (e) {
+                logger.debug(e);
+                logger.info(`获取视频信息失败${retries < 3 ? ` 第 ${3 - retries} 次重试`: ''}`);
+                retries--;
+            }
+        }
     }
 
     async disconnect(): Promise<void> {
@@ -49,8 +59,8 @@ class YouTubeObserver extends EventEmitter {
                 await this.getVideoChunks();
                 await sleep(8000);
             } catch (e) {
-                console.log(e);
-                console.log("获取MPD列表失败");
+                logger.debug(e);
+                logger.info("获取MPD列表失败");
                 await sleep(1500);
             }
         }

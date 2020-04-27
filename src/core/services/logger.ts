@@ -6,7 +6,11 @@ abstract class Logger {
 }
 
 export class ConsoleLogger extends Logger {
+    debugFlag = false;
     debug(message: string) {
+        if (!this.debugFlag) {
+            return;
+        }
         console.debug(`${message}`);
     }
 
@@ -18,12 +22,15 @@ export class ConsoleLogger extends Logger {
         console.warn(`${message}`);
     }
 
-    error(message: string, error: Error) {
+    error(message: string, error?: Error) {
         console.info(`${message}`);
         if (error) {
             console.log(error);
         }
     }
+    enableDebug() {
+        this.debugFlag = true;
+    }
 }
 
-export default Logger;
+export default new ConsoleLogger();

@@ -19,6 +19,7 @@ Erii.bind({
     }
 }, async (ctx, options: any) => {
     if (options.live) {
+        console.log(options);
         const videoUrl = ctx.getArgument().toString();
         const downloader = new LiveDownloader({
             videoUrl,
@@ -36,6 +37,11 @@ Erii.addOption({
     name: ['live'],
     command: 'download',
     description: 'Download live'
+});
+
+Erii.addOption({
+    name: ['verbose', 'debug'],
+    description: 'Debug output'
 });
 
 Erii.default(() => {

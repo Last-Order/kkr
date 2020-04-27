@@ -18,11 +18,12 @@ interface Task {
 export interface LiveDownloaderOptions {
     videoUrl: string;
     format: string;
+    verbose: boolean;
 }
 
 class LiveDownloader {
     observer: YouTubeObserver;
-    logger: Logger;
+    logger: ConsoleLogger;
     workDirectoryName: string;
     outputFilename: string;
     unfinishedTasks: Task[] = [];
@@ -32,12 +33,15 @@ class LiveDownloader {
     nowRunningThreads = 0;
     stopFlag = false;
     finishFlag = false;
-    constructor({ videoUrl, format }: Partial<LiveDownloaderOptions>) {
+    constructor({ videoUrl, format, verbose }: Partial<LiveDownloaderOptions>) {
         this.observer = new YouTubeObserver({
             videoUrl,
             format
         });
-        this.logger = new ConsoleLogger();
+        this.logger = Logger;
+        if (verbose) {
+            this.logger.enableDebug();
+        }
     }
 
     async start() {
