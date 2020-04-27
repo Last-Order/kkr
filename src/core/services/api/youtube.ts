@@ -3,7 +3,7 @@ import * as ErrorMessages from '../../messages/error';
 
 export class ParseError extends Error { }
 class YouTubeService {
-    static async getVideoIdByUrl(videoUrl: string) {
+    static getVideoIdByUrl(videoUrl: string) {
         let videoId;
         if (!videoUrl) {
             throw new ParseError(ErrorMessages.CANT_PARSE_VIDEO_URL);
@@ -42,7 +42,8 @@ class YouTubeService {
     static async getHeartbeat(videoUrl) {
         const videoId = YouTubeService.getVideoIdByUrl(videoUrl);
         const API_URL = `https://www.youtube.com/heartbeat?video_id=${videoId}`;
-        
+        const videoInfoResponse = await axios.get(API_URL);
+        return videoInfoResponse.data;
     }
 }
 

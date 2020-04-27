@@ -30,6 +30,22 @@ class YouTubeObserver extends EventEmitter {
     }
 
     async connect(): Promise<ConnectResult> {
+        // Get Heartbeat
+        while (true) {
+            try {
+                const response = await YouTubeService.getHeartbeat(this.videoUrl);
+                if (response.status === "live_stream_offline") {
+                    logger.info(`直播尚未开始：${response.reason}`);
+                } else {
+                    break;
+                }
+                await sleep(15000);
+            } catch (e) {
+                logger.debug(e);
+                logger.warning(`获取直播信息失败 稍后重试`);
+                await sleep(3000);
+            }
+        }
         // Get Video Info
         let retries = 3;
         while (retries > 0) {
@@ -40,7 +56,7 @@ class YouTubeObserver extends EventEmitter {
                 return { mpdUrl, title };
             } catch (e) {
                 logger.debug(e);
-                logger.info(`获取视频信息失败${retries < 3 ? ` 第 ${3 - retries} 次重试`: ''}`);
+                logger.warning(`获取视频信息失败${retries < 3 ? ` 第 ${3 - retries} 次重试`: ''}`);
                 retries--;
             }
         }

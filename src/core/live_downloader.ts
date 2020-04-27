@@ -123,6 +123,11 @@ class LiveDownloader {
     }
 
     async beforeExit() {
+        if (this.finishedTasks.length === 0) {
+            // 什么也没做 直接退出吧
+            this.clean();
+            return;
+        }
         this.finishedTasks = this.finishedTasks.sort((a, b) => a.id - b.id);
         let finishedVideoTasks = this.finishedTasks.filter(t => t.type === 'video');
         const finishedAudioTasks = this.finishedTasks.filter(t => t.type === 'audio');
@@ -184,6 +189,10 @@ class LiveDownloader {
                 this.logger.error(`混流第 ${i + 1} 个输出文件失败`);
             }
         }
+        this.clean();
+    }
+
+    async clean() {
         this.logger.info(`清理临时文件`);
         await deleteDirectory(path.resolve(this.workDirectoryName, './video_download'));
         await deleteDirectory(path.resolve(this.workDirectoryName, './audio_download'));
