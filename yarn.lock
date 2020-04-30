@@ -352,10 +352,10 @@ rimraf@^3.0.2:
   dependencies:
     glob "^7.1.3"
 
-shua@^1.1.7:
-  version "1.1.7"
-  resolved "https://registry.yarnpkg.com/shua/-/shua-1.1.7.tgz#2458d8f92c18c895980d529f59ac1f76415544e2"
-  integrity sha512-zFprDMtVhesZHYQG/5/ahgUaf2lYBlNsf+57N9F/1Kb5VXCMmB6b/3Dw9Z5/1r7RJpfw/XCNZsrHgWa3rVz4SA==
+shua@^1.1.8:
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/shua/-/shua-1.1.8.tgz#1f2fea354942656bf3e145213deea47c84b241a8"
+  integrity sha512-WZ5gd49g565qLb21FndwNcbnyNZ3TWQE797E9FRqTCIQSp1QsHaeOZz1dE0ygu2avNecD4rfWoeyx5jdH7MBKA==
   dependencies:
     axios "^0.19.1"
     erii "^1.2.6"
