@@ -20,7 +20,6 @@ class YouTubeObserver extends EventEmitter {
     timer: NodeJS.Timeout;
     audioUrlFlags: boolean[] = [];
     videoUrlFlags: boolean[] = [];
-    stopFlag: boolean = false;
     constructor({ videoUrl, format }) {
         super();
         this.videoUrl = videoUrl;
@@ -63,23 +62,23 @@ class YouTubeObserver extends EventEmitter {
     }
 
     async disconnect(): Promise<void> {
-        this.stopFlag = true;
+        clearInterval(this.timer);
     }
 
     async cycling() {
-        this.on('end', () => {
-            this.stopFlag = true;
-        });
-        while (!this.stopFlag) {
+        this.timer = setInterval(async () => {
             try {
+                logger.debug('正获取MPD列表');
                 await this.getVideoChunks();
-                await sleep(8000);
+                logger.debug('获取MPD列表成功');
             } catch (e) {
                 logger.debug(e);
                 logger.info("获取MPD列表失败");
-                await sleep(1500);
             }
-        }
+        }, 5000)
+        this.on('end', () => {
+            clearInterval(this.timer);
+        });
     }
 
     async getVideoChunks() {
@@ -89,7 +88,7 @@ class YouTubeObserver extends EventEmitter {
             const source = CancelToken.source();
             const timer = setTimeout(() => {
                 source.cancel('Timeout');
-            }, 15000);
+            }, 8000);
             const mpdStr = (await axios.get(this.mpdUrl, {
                 cancelToken: source.token
             })).data;

@@ -1,9 +1,9 @@
 import execCommand from './exec_command';
-const deleteDirectory = (path: string) => {
+const deleteDirectory = async (path: string) => {
     if (process.platform === "win32") {
-        return execCommand(`rd /s /q "${path}"`);
+        return await execCommand(`rd /s /q "${path}"`);
     } else {
-        return execCommand(`rm -rf "${path}"`);
+        return await execCommand(`rm -rf "${path}"`);
     }
 }
 

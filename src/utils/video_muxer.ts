@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 import CommandExecuter from './command_executer';
 import { EventEmitter } from 'events';
+import logger from '../core/services/logger';
 
 class VideoTrack {
     type = 'video';
@@ -71,6 +72,7 @@ class VideoMuxer extends EventEmitter {
             command += `-c copy -movflags faststart "${this.outputPathName}${this.outputPathExt}"`;
         }
         this.commandExecuter.on('stderr', (data) => {
+            logger.info(data);
             this.emit('stderr', data);
         });
         this.commandExecuter.on('fail', (child) => {

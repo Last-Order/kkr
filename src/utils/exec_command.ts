@@ -1,7 +1,7 @@
 const exec = require('child_process').exec;
 const execCommand = (command: string) => {
     return new Promise((resolve, reject) => {
-        const child = exec(command);
+        let child = exec(command);
         child.stdout.on('data', (data) => {
             console.log(data);
         });

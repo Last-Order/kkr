@@ -7,6 +7,7 @@ import Logger, { ConsoleLogger } from "./services/logger";
 import mergeFiles from "../utils/merge_files";
 import { VideoMuxer, VideoTrack, AudioTrack } from "../utils/video_muxer";
 import deleteDirectory from "../utils/delete_directory";
+const wtf = require('wtfnode');
 interface Task {
     type: 'video' | 'audio';
     url: string;
@@ -194,10 +195,9 @@ class LiveDownloader {
 
     async clean() {
         this.logger.info(`清理临时文件`);
-        await deleteDirectory(path.resolve(this.workDirectoryName, './video_download'));
-        await deleteDirectory(path.resolve(this.workDirectoryName, './audio_download'));
-        this.logger.info('干完了');
+        await deleteDirectory(path.resolve(this.workDirectoryName));
         this.observer.disconnect();
+        this.logger.info(`输出文件位于：${path.resolve('.', this.outputFilename)}`)
         process.exit();
     }
 
