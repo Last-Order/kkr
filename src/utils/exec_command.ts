@@ -1,18 +1,18 @@
 const exec = require('child_process').exec;
-const execCommand = (command: string) => {
+const execCommand = (command: string, slient: boolean = false) => {
     return new Promise((resolve, reject) => {
         let child = exec(command);
         child.stdout.on('data', (data) => {
-            console.log(data);
+            !slient && console.log(data);
         });
         child.stderr.on('data', (data) => {
-            console.log(data);
+            !slient && console.log(data);
         });
         child.on('close', (code, signal) => {
             if (code === 0) {
                 resolve();
             } else {
-                console.error(code, signal);
+                !slient && console.error(code, signal);
                 reject();
             }
         }); 

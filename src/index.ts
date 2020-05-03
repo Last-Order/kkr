@@ -3,7 +3,9 @@ import Erii from 'erii';
 import * as fs from 'fs';
 import * as path from 'path';
 import Downloader from './core/downloader';
-import LiveDownloader, { LiveDownloaderOptions } from './core/live_downloader';
+import LiveDownloader from './core/live_downloader';
+import execCommand from './utils/exec_command';
+import logger from './core/services/logger';
 
 Erii.setMetaInfo({
     name: 'KKR',

@@ -23,13 +23,19 @@ class YouTubeService {
      */
     static async getVideoInfo(videoUrl: string) {
         const videoId = YouTubeService.getVideoIdByUrl(videoUrl);
-        const API_URL = `https://youtube.com/get_video_info?video_id=${videoId}`;
-        const videoInfoResponse = await axios.get(API_URL);
-        const playerResponse = JSON.parse(
-            decodeURIComponent(videoInfoResponse.data.match(/player_response=(.+?)&/)[1])
+        const API_URL = `https://youtube.com/watch?v=${videoId}`;
+        const videoInfoResponse = await axios.get(API_URL, {
+            headers: {
+                'Referer': 'https://www.youtube.com/',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36'
+            }
+        });
+        const playerConfig = JSON.parse(
+            videoInfoResponse.data.match(/ytplayer\.config = ({.+?});/)[1]
         );
+        const playerResponse = JSON.parse(playerConfig.args.player_response);
         const title = playerResponse.videoDetails.title;
-        if (!playerResponse.streamingData) {
+        if (!playerResponse.streamingData || !playerResponse.videoDetails.isLiveContent) {
             throw new ParseError(ErrorMessages.NOT_A_LIVE_STREAM);
         }
         const mpdUrl = playerResponse.streamingData.dashManifestUrl;

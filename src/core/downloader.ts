@@ -11,6 +11,7 @@ import deleteDirectory from "../utils/delete_directory";
 import selectFormat from "../utils/select_format";
 import escapeFilename from "../utils/escape_filename";
 import logger, { ConsoleLogger } from "./services/logger";
+import { isFFmpegAvailable } from "../utils/system";
 
 export class DownloadError extends Error { }
 
@@ -30,6 +31,9 @@ class Downloader extends EventEmitter {
     workDirectoryName: string;
     outputFilename: string;
     logger: ConsoleLogger;
+
+    isFFmpegAvailable: boolean;
+
     constructor({ videoUrl, format, verbose }: Partial<DownloaderOptions>) {
         super();
         this.videoUrl = videoUrl;
@@ -43,6 +47,10 @@ class Downloader extends EventEmitter {
     }
 
     async download() {
+        this.isFFmpegAvailable = await isFFmpegAvailable();
+        if (!this.isFFmpegAvailable) {
+            this.logger.warning('FFmpeg不可用 视频不会自动合并');
+        }
         // 解析视频信息
         this.logger.info('正在获取视频信息');
         const {
