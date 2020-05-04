@@ -4,11 +4,9 @@ import * as path from 'path';
 import escapeFilename from "../utils/escape_filename";
 import download from "../utils/download_file";
 import Logger, { ConsoleLogger } from "./services/logger";
-import mergeFiles from "../utils/merge_files";
-import { VideoMuxer, VideoTrack, AudioTrack, VideoSequence, AudioSequence } from "../utils/video_muxer";
+import { VideoMuxer, VideoSequence, AudioSequence } from "../utils/video_muxer";
 import deleteDirectory from "../utils/delete_directory";
 import { isFFmpegAvailable } from "../utils/system";
-const wtf = require('wtfnode');
 interface Task {
     type: 'video' | 'audio';
     url: string;
