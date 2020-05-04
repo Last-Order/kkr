@@ -32,6 +32,7 @@ class YouTubeObserver extends EventEmitter {
         // Get Heartbeat
         while (true) {
             try {
+                logger.info(`正在获取视频信息`);
                 const response = await YouTubeService.getHeartbeat(this.videoUrl);
                 if (response.status === "live_stream_offline") {
                     logger.info(`直播尚未开始：${response.reason}`);
@@ -126,7 +127,7 @@ class YouTubeObserver extends EventEmitter {
         if (newAudioUrls.length > 0) {
             this.emit('new-audio-chunks', newAudioUrls);
         }
-        if (parseResult.rawMpd.MPD.attr['@_type'] === 'static') {
+        if (parseResult.rawMpd?.MPD?.attr['@_type'] === 'static') {
             // 直播结束
             this.emit('end');
         }

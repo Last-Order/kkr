@@ -12,8 +12,24 @@ class VideoTrack {
     }
 }
 
+class VideoSequence {
+    type = 'video_sequence';
+    path: string;
+    constructor({ path }) {
+        this.path = path;
+    }
+}
+
 class AudioTrack {
     type = 'audio';
+    path: string;
+    constructor({ path }) {
+        this.path = path;
+    }
+}
+
+class AudioSequence {
+    type = 'audio_sequence';
     path: string;
     constructor({ path }) {
         this.path = path;
@@ -24,8 +40,10 @@ class VideoMuxer extends EventEmitter {
     outputPathName: string;
     outputPathExt: string;
     outputPath: string;
-    videoTracks: VideoTrack[];
-    audioTracks: AudioTrack[];
+    videoTracks: VideoTrack[] = [];
+    audioTracks: AudioTrack[] = [];
+    videoSequences: VideoSequence[] = [];
+    audioSequences: AudioSequence[] = [];
     commandExecuter: CommandExecuter;
     constructor(outputPath) {
         super();
@@ -36,30 +54,38 @@ class VideoMuxer extends EventEmitter {
         this.outputPathName = parsedPath.name;
         this.outputPathExt = parsedPath.ext;
         this.outputPath = outputPath;
-        this.videoTracks = [];
-        this.audioTracks = [];
         this.commandExecuter = new CommandExecuter();
     }
-    addVideoTracks(...tracks) {
+    addVideoTracks(...tracks: VideoTrack[]) {
         this.videoTracks.push(...tracks);
     }
-    addAudioTracks(...tracks) {
+    addAudioTracks(...tracks: AudioTrack[]) {
         this.audioTracks.push(...tracks);
     }
+    addVideoSequences(...sequences: VideoSequence[]) {
+        this.videoSequences.push(...sequences);
+    }
+    addAudioSequences(...sequences: AudioSequence[]) {
+        this.audioSequences.push(...sequences);
+    }
     async run() {
-        const allTracks = [...this.videoTracks, ...this.audioTracks];
+        const allTracks = [...this.videoTracks, ...this.audioTracks, ...this.videoSequences, ...this.audioSequences];
         let command = 'ffmpeg ';
         // Add input
         for (const track of allTracks) {
-            command += `-i "${track.path}" `;
+            if (track.type === 'video_sequence' || track.type === 'audio_sequence') {
+                command += `-f concat -safe 0 -i "${track.path}" `;
+            } else {
+                command += `-i "${track.path}" `;
+            }
         }
         // Add map settings
         for (let i = 0; i <= allTracks.length - 1; i++) {
             const nowTrack = allTracks[i];
-            if (nowTrack.type === 'video') {
+            if (nowTrack.type.startsWith('video')) {
                 command += `-map ${i}:v `;
             }
-            if (nowTrack.type === 'audio') {
+            if (nowTrack.type.startsWith('audio')) {
                 command += `-map ${i}:a `;
             }
         }
@@ -93,5 +119,7 @@ class VideoMuxer extends EventEmitter {
 export {
     VideoTrack,
     AudioTrack,
+    VideoSequence,
+    AudioSequence,
     VideoMuxer
 }

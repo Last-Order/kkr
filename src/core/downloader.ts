@@ -5,7 +5,7 @@ import YouTubeService from "./services/api/youtube";
 import axios from 'axios';
 import parseMpd from "./mpd_parser";
 import download from "../utils/download_files";
-import { VideoMuxer, VideoTrack, AudioTrack } from "../utils/video_muxer";
+import { VideoMuxer, VideoSequence, AudioSequence } from "../utils/video_muxer";
 import mergeFiles from "../utils/merge_files";
 import deleteDirectory from "../utils/delete_directory";
 import selectFormat from "../utils/select_format";
@@ -73,20 +73,29 @@ class Downloader extends EventEmitter {
         await download(this.audioChunkUrls, path.resolve(this.workDirectoryName, './audio_download'));
         this.downloadedVideoChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, './video_download'));
         this.downloadedAudioChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, './audio_download'));
-        logger.info(`合并视频文件`);
-        await mergeFiles(
-            this.downloadedVideoChunkFiles.map(f => path.resolve(this.workDirectoryName, './video_download', f)),
-            path.resolve(this.workDirectoryName, './video_download/video.mp4')
-        );
-        this.logger.info(`合并音频文件`);
-        await mergeFiles(
-            this.downloadedAudioChunkFiles.map(f => path.resolve(this.workDirectoryName, './audio_download', f)),
-            path.resolve(this.workDirectoryName, './audio_download/audio.mp4')
-        );
-        this.logger.info(`混流`);
+        if (!this.isFFmpegAvailable) {
+            this.logger.error('FFmpeg不可用 请手动合并文件');
+            this.logger.error(`临时文件目录位于 ${path.resolve(this.workDirectoryName)}`);
+            process.exit();
+        }
+        this.logger.info(`准备混流`);
+        fs.writeFileSync(path.resolve(this.workDirectoryName, 'video_files.txt'), this.downloadedVideoChunkFiles.map(
+            f => `file '${path.resolve(this.workDirectoryName, './video_download', f)}'`
+        ).join('\n'));
+        fs.writeFileSync(path.resolve(this.workDirectoryName, 'audio_files.txt'), this.downloadedVideoChunkFiles.map(
+            f => `file '${path.resolve(this.workDirectoryName, './audio_download', f)}'`
+        ).join('\n'));
         const videoMuxer = new VideoMuxer(this.outputFilename);
-        videoMuxer.addVideoTracks(new VideoTrack({ path: path.resolve(this.workDirectoryName, './video_download/video.mp4') }));
-        videoMuxer.addAudioTracks(new AudioTrack({ path: path.resolve(this.workDirectoryName, './audio_download/audio.mp4') }));
+        videoMuxer.addVideoSequences(
+            new VideoSequence({
+                path: path.resolve(this.workDirectoryName, 'video_files.txt')
+            })
+        );
+        videoMuxer.addAudioSequences(
+            new AudioSequence({
+                path: path.resolve(this.workDirectoryName, 'audio_files.txt')
+            })
+        );
         videoMuxer.on('success', async () => {
             this.logger.info(`混流完成 正删除临时文件`);
             await deleteDirectory(this.workDirectoryName);

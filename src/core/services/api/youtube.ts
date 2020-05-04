@@ -34,11 +34,11 @@ class YouTubeService {
             videoInfoResponse.data.match(/ytplayer\.config = ({.+?});/)[1]
         );
         const playerResponse = JSON.parse(playerConfig.args.player_response);
-        const title = playerResponse.videoDetails.title;
-        if (!playerResponse.streamingData || !playerResponse.videoDetails.isLiveContent) {
+        const title = playerResponse?.videoDetails?.title as string;
+        if (!playerResponse.streamingData || !playerResponse?.videoDetails?.isLiveContent) {
             throw new ParseError(ErrorMessages.NOT_A_LIVE_STREAM);
         }
-        const mpdUrl = playerResponse.streamingData.dashManifestUrl;
+        const mpdUrl = playerResponse.streamingData.dashManifestUrl as string;
         return {
             title,
             mpdUrl

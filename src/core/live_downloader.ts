@@ -5,8 +5,9 @@ import escapeFilename from "../utils/escape_filename";
 import download from "../utils/download_file";
 import Logger, { ConsoleLogger } from "./services/logger";
 import mergeFiles from "../utils/merge_files";
-import { VideoMuxer, VideoTrack, AudioTrack } from "../utils/video_muxer";
+import { VideoMuxer, VideoTrack, AudioTrack, VideoSequence, AudioSequence } from "../utils/video_muxer";
 import deleteDirectory from "../utils/delete_directory";
+import { isFFmpegAvailable } from "../utils/system";
 const wtf = require('wtfnode');
 interface Task {
     type: 'video' | 'audio';
@@ -34,6 +35,8 @@ class LiveDownloader {
     nowRunningThreads = 0;
     stopFlag = false;
     finishFlag = false;
+
+    isFFmpegAvailable: boolean;
     constructor({ videoUrl, format, verbose }: Partial<LiveDownloaderOptions>) {
         this.observer = new YouTubeObserver({
             videoUrl,
@@ -46,6 +49,10 @@ class LiveDownloader {
     }
 
     async start() {
+        this.isFFmpegAvailable = await isFFmpegAvailable();
+        if (!this.isFFmpegAvailable) {
+            this.logger.warning('FFmpeg不可用 视频不会自动合并');
+        }
         this.workDirectoryName = `kkr_download_${new Date().valueOf()}`;
         fs.mkdirSync(this.workDirectoryName);
         fs.mkdirSync(path.resolve(this.workDirectoryName, './video_download'));
@@ -108,14 +115,14 @@ class LiveDownloader {
         // handle task
         try {
             await this.handleTask(task);
-            this.logger.debug(`${task.type}#${task.id} 已下载`);
+            this.logger.info(`${task.type}#${task.id} 已下载`);
             this.finishedTasks.push(task);
             this.nowRunningThreads--;
             this.checkQueue();
         } catch (e) {
             task.retry++;
             this.nowRunningThreads--;
-            this.logger.debug(`${task.type}#${task.id} 下载失败 稍后重试`);
+            this.logger.warning(`${task.type}#${task.id} 下载失败 稍后重试`);
             if (task.retry <= 10) {
                 this.unfinishedTasks.push(task);
             }
@@ -177,16 +184,29 @@ class LiveDownloader {
             }
         }
         for (let i = 0; i <= seqs.length - 1; i++) {
-            this.logger.info(`为第 ${i + 1} 个输出文件合并视频`);
-            const videoOutputPath = path.resolve(this.workDirectoryName, `./video_download/video_merge_${i}.mp4`);
-            const audioOutputPath = path.resolve(this.workDirectoryName, `./audio_download/video_merge_${i}.mp4`);
-            await mergeFiles(Array.from(seqs[i], t => t.id).map(id => `${path.resolve(this.workDirectoryName, './video_download/', id.toString())}`), videoOutputPath);
-            this.logger.info(`为第 ${i + 1} 个输出文件合并音频`);
-            await mergeFiles(Array.from(seqs[i], t => t.id).map(id => `${path.resolve(this.workDirectoryName, './audio_download/', id.toString())}`), audioOutputPath);
-            this.logger.info(`混流第 ${i + 1} 个输出文件`)
+            this.logger.info(`为第 ${i + 1} 个输出文件混流视频`);
+            const videoListFilename = `video_files_${new Date().valueOf()}.txt`;
+            const audioListFilename = `audio_files_${new Date().valueOf()}.txt`;
+            fs.writeFileSync(
+                path.resolve(this.workDirectoryName, videoListFilename),
+                Array.from(seqs[i], t => t.id).map(
+                    f => `file '${path.resolve(this.workDirectoryName, './video_download', f.toString())}'`
+                ).join('\n')
+            );
+            fs.writeFileSync(
+                path.resolve(this.workDirectoryName, audioListFilename),
+                Array.from(seqs[i], t => t.id).map(
+                    f => `file '${path.resolve(this.workDirectoryName, './audio_download', f.toString())}'`
+                ).join('\n')
+            );
             try {
-                await this.merge(videoOutputPath, audioOutputPath, i + 1);
+                await this.merge(
+                    path.resolve(this.workDirectoryName, videoListFilename), 
+                    path.resolve(this.workDirectoryName, audioListFilename),
+                    i + 1
+                );
             } catch (e) {
+                this.logger.debug(e);
                 this.logger.error(`混流第 ${i + 1} 个输出文件失败`);
             }
         }
@@ -197,7 +217,9 @@ class LiveDownloader {
         this.logger.info(`清理临时文件`);
         await deleteDirectory(path.resolve(this.workDirectoryName));
         this.observer.disconnect();
-        this.logger.info(`输出文件位于：${path.resolve('.', this.outputFilename)}`)
+        if (this.outputFilename) {
+            this.logger.info(`输出文件位于：${path.resolve('.', this.outputFilename)}`);
+        }
         process.exit();
     }
 
@@ -210,10 +232,10 @@ class LiveDownloader {
     async merge(videoPath, audioPath, suffix) {
         return new Promise((resolve, reject) => {
             const videoMuxer = new VideoMuxer(`${this.outputFilename}${suffix ? `_${suffix}` : ''}.mp4`);
-            videoMuxer.addVideoTracks(new VideoTrack({
+            videoMuxer.addVideoSequences(new VideoSequence({
                 path: videoPath
             }));
-            videoMuxer.addAudioTracks(new AudioTrack({
+            videoMuxer.addAudioSequences(new AudioSequence({
                 path: audioPath
             }));
             videoMuxer.on('success', resolve);
