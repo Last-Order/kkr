@@ -34,4 +34,4 @@ Yet another YouTube DVR downloader!
 
 ## 用法
 
-kkr -d "https://www.youtube.com/watch?v=BTTq175DJOY --live"
+`kkr -d "https://www.youtube.com/watch?v=BTTq175DJOY" --live`
