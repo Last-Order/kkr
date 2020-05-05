@@ -101,6 +101,10 @@ class LiveDownloader {
             }));
             this.checkQueue();
         });
+        this.observer.on('end', () => {
+            this.stopFlag = true;
+            this.checkQueue();
+        });
     }
 
     async checkQueue() {
