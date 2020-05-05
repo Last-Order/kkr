@@ -11,12 +11,15 @@ export class NetworkError extends Error {}
 export interface ConnectResult {
     mpdUrl: string;
     title: string;
+    isLowLatencyLiveStream: boolean;
 }
 
 class YouTubeObserver extends EventEmitter {
     videoUrl: string;
     mpdUrl: string;
     format: string;
+
+    playlistFetchInterval: number = 5000;
     timer: NodeJS.Timeout;
     audioUrlFlags: boolean[] = [];
     videoUrlFlags: boolean[] = [];
@@ -50,10 +53,13 @@ class YouTubeObserver extends EventEmitter {
         let retries = 3;
         while (retries > 0) {
             try {
-                const { mpdUrl, title } = await YouTubeService.getVideoInfo(this.videoUrl);
+                const { mpdUrl, title, isLowLatencyLiveStream } = await YouTubeService.getVideoInfo(this.videoUrl);
                 this.mpdUrl = mpdUrl;
+                if (isLowLatencyLiveStream) {
+                    this.playlistFetchInterval = 4000;
+                }
                 this.cycling();
-                return { mpdUrl, title };
+                return { mpdUrl, title, isLowLatencyLiveStream };
             } catch (e) {
                 logger.debug(e);
                 logger.warning(`获取视频信息失败${retries < 3 ? ` 第 ${3 - retries} 次重试`: ''}`);
@@ -76,7 +82,7 @@ class YouTubeObserver extends EventEmitter {
                 logger.debug(e);
                 logger.info("获取MPD列表失败");
             }
-        }, 5000)
+        }, this.playlistFetchInterval)
         this.on('end', () => {
             clearInterval(this.timer);
         });

@@ -39,9 +39,11 @@ class YouTubeService {
             throw new ParseError(ErrorMessages.NOT_A_LIVE_STREAM);
         }
         const mpdUrl = playerResponse.streamingData.dashManifestUrl as string;
+        const isLowLatencyLiveStream = !!(playerResponse?.videoDetails?.isLowLatencyLiveStream);
         return {
             title,
-            mpdUrl
+            mpdUrl,
+            isLowLatencyLiveStream
         };
     }
 

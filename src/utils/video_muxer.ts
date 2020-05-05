@@ -92,6 +92,7 @@ class VideoMuxer extends EventEmitter {
         if (fs.existsSync(`${this.outputPathName}${this.outputPathExt}`)) {
             this.outputPathName = this.outputPathName + `_${new Date().valueOf().toString()}`;
         }
+        command += '-loglevel error -stats ';
         if (this.outputPath.endsWith('.mkv')) {
             command += `-c copy -reserve_index_space 200k "${this.outputPathName}${this.outputPathExt}"`;
         } else if (this.outputPath.endsWith('.mp4')) {
@@ -105,10 +106,10 @@ class VideoMuxer extends EventEmitter {
             this.emit('fail', child);
         });
         this.commandExecuter.on('success', () => {
-            this.emit('success');
+            this.emit('success', `${this.outputPathName}${this.outputPathExt}`);
         });
         this.commandExecuter.on('start', (child) => {
-            this.emit('start', child);
+            this.emit('start');
         });
         this.commandExecuter.run(command, {
             output: ['stderr']

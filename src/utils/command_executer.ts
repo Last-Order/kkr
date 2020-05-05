@@ -9,6 +9,7 @@ export default class CommandExecuter extends EventEmitter {
     run(command, { output = ['stdout', 'stderr'] } = {}) {
         const child = exec(command, {
             encoding: 'binary',
+            maxBuffer: 4000 * 1024
         });
         this.emit('start', child);
         if (output.includes('stdout')) {

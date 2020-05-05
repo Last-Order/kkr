@@ -4,9 +4,10 @@ import * as path from 'path';
 import escapeFilename from "../utils/escape_filename";
 import download from "../utils/download_file";
 import Logger, { ConsoleLogger } from "./services/logger";
-import { VideoMuxer, VideoSequence, AudioSequence } from "../utils/video_muxer";
+import { VideoMuxer, VideoTrack, AudioTrack, VideoSequence, AudioSequence } from "../utils/video_muxer";
 import deleteDirectory from "../utils/delete_directory";
 import { isFFmpegAvailable } from "../utils/system";
+import mergeFiles from "../utils/merge_files";
 interface Task {
     type: 'video' | 'audio';
     url: string;
@@ -21,6 +22,11 @@ export interface LiveDownloaderOptions {
     verbose: boolean;
 }
 
+export interface OutputItem {
+    description: string;
+    path: string;
+}
+
 class LiveDownloader {
     observer: YouTubeObserver;
     logger: ConsoleLogger;
@@ -29,11 +35,13 @@ class LiveDownloader {
     unfinishedTasks: Task[] = [];
     finishedTasks: Task[] = [];
     dropedTasks: Task[] = [];
+    outputFiles: OutputItem[] = [];
     maxRunningThreads = 16;
     nowRunningThreads = 0;
     stopFlag = false;
     finishFlag = false;
 
+    isLowLatencyLiveStream: boolean;
     isFFmpegAvailable: boolean;
     constructor({ videoUrl, format, verbose }: Partial<LiveDownloaderOptions>) {
         this.observer = new YouTubeObserver({
@@ -67,6 +75,7 @@ class LiveDownloader {
             }
         });
         const connectResult = await this.observer.connect();
+        this.isLowLatencyLiveStream = connectResult.isLowLatencyLiveStream;
         this.outputFilename = escapeFilename(`${connectResult.title}`);
         this.observer.on('new-video-chunks', (urls) => {
             this.unfinishedTasks.push(...urls.map((u: Pick<Task, 'id' | 'url'>): Task => {
@@ -182,41 +191,69 @@ class LiveDownloader {
             }
         }
         for (let i = 0; i <= seqs.length - 1; i++) {
-            this.logger.info(`为第 ${i + 1} 个输出文件混流视频`);
-            const videoListFilename = `video_files_${new Date().valueOf()}.txt`;
-            const audioListFilename = `audio_files_${new Date().valueOf()}.txt`;
-            fs.writeFileSync(
-                path.resolve(this.workDirectoryName, videoListFilename),
-                Array.from(seqs[i], t => t.id).map(
-                    f => `file '${path.resolve(this.workDirectoryName, './video_download', f.toString())}'`
-                ).join('\n')
-            );
-            fs.writeFileSync(
-                path.resolve(this.workDirectoryName, audioListFilename),
-                Array.from(seqs[i], t => t.id).map(
-                    f => `file '${path.resolve(this.workDirectoryName, './audio_download', f.toString())}'`
-                ).join('\n')
-            );
-            try {
-                await this.merge(
-                    path.resolve(this.workDirectoryName, videoListFilename), 
-                    path.resolve(this.workDirectoryName, audioListFilename),
-                    i + 1
+            if (this.isLowLatencyLiveStream) {
+                // 低延迟直播可以直接二进制连接分片
+                const videoOutputPath = path.resolve(this.workDirectoryName, `./video_download/video_merge_${i}.mp4`);
+                const audioOutputPath = path.resolve(this.workDirectoryName, `./audio_download/video_merge_${i}.mp4`);
+                this.logger.info(`为第 ${i + 1} 个输出文件合并视频`);
+                await mergeFiles(Array.from(seqs[i], t => t.id).map(id => `${path.resolve(this.workDirectoryName, './video_download/', id.toString())}`), videoOutputPath);
+                this.logger.info(`为第 ${i + 1} 个输出文件合并音频`);
+                await mergeFiles(Array.from(seqs[i], t => t.id).map(id => `${path.resolve(this.workDirectoryName, './audio_download/', id.toString())}`), audioOutputPath);
+                this.logger.info(`混流第 ${i + 1} 个输出文件`)
+                try {
+                    const filename = await this.merge(videoOutputPath, audioOutputPath, i + 1);
+                    this.outputFiles.push({
+                        path: filename,
+                        description: `#${seqs[i][0]} - #${seqs[i][seqs[i].length - 1]}`
+                    });
+                } catch (e) {
+                    this.logger.debug(e);
+                    this.logger.error(`混流第 ${i + 1} 个输出文件失败`);
+                }
+            } else {
+                const videoListFilename = path.resolve(this.workDirectoryName, `video_files_${new Date().valueOf()}.txt`);
+                const audioListFilename = path.resolve(this.workDirectoryName, `audio_files_${new Date().valueOf()}.txt`);
+                fs.writeFileSync(
+                    path.resolve(this.workDirectoryName, videoListFilename),
+                    Array.from(seqs[i], t => t.id).map(
+                        f => `file '${path.resolve(this.workDirectoryName, './video_download', f.toString())}'`
+                    ).join('\n')
                 );
-            } catch (e) {
-                this.logger.debug(e);
-                this.logger.error(`混流第 ${i + 1} 个输出文件失败`);
+                fs.writeFileSync(
+                    path.resolve(this.workDirectoryName, audioListFilename),
+                    Array.from(seqs[i], t => t.id).map(
+                        f => `file '${path.resolve(this.workDirectoryName, './audio_download', f.toString())}'`
+                    ).join('\n')
+                );
+                try {
+                    const filename = await this.mergeSequences(videoListFilename, audioListFilename, i + 1);
+                    this.outputFiles.push({
+                        path: filename,
+                        description: `#${seqs[i][0]} - #${seqs[i][seqs[i].length - 1]}`
+                    });
+                } catch (e) {
+                    this.logger.debug(e);
+                    this.logger.error(`混流第 ${i + 1} 个输出文件失败`);
+                }
             }
         }
         this.clean();
     }
 
     async clean() {
-        this.logger.info(`清理临时文件`);
-        await deleteDirectory(path.resolve(this.workDirectoryName));
+        this.logger.info(`测试期间不删除临时文件 请手动删除 临时文件位于 ${path.resolve(this.workDirectoryName)}`);
+        // this.logger.info(`清理临时文件`);
+        // await deleteDirectory(path.resolve(this.workDirectoryName));
         this.observer.disconnect();
-        if (this.outputFilename) {
-            this.logger.info(`输出文件位于：${path.resolve('.', this.outputFilename)}`);
+        if (this.outputFiles.length > 0) {
+            if (this.outputFiles.length === 1) {
+                this.logger.info(`输出文件位于：${path.resolve('.', this.outputFiles[0].path)}`);
+            } else {
+                this.logger.info(`输出了多个文件 列表如下`);
+                for (const item of this.outputFiles) {
+                    this.logger.info(`${item.description} -> ${item.path}`);
+                }
+            }
         }
         process.exit();
     }
@@ -227,16 +264,33 @@ class LiveDownloader {
         });
     }
 
-    async merge(videoPath, audioPath, suffix) {
+    async merge(videoPath: string, audioPath: string, suffix: string | number): Promise<string> {
         return new Promise((resolve, reject) => {
             const videoMuxer = new VideoMuxer(`${this.outputFilename}${suffix ? `_${suffix}` : ''}.mp4`);
-            videoMuxer.addVideoSequences(new VideoSequence({
+            videoMuxer.addVideoTracks(new VideoTrack({
                 path: videoPath
             }));
-            videoMuxer.addAudioSequences(new AudioSequence({
+            videoMuxer.addAudioTracks(new AudioTrack({
                 path: audioPath
             }));
-            videoMuxer.on('success', resolve);
+            videoMuxer.on('success', outputFilename => resolve(outputFilename));
+            videoMuxer.on('fail', () => {
+                reject();
+            });
+            videoMuxer.run();
+        });
+    }
+
+    async mergeSequences(videoFileListPath: string, audioFileListPath: string, suffix: string | number): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const videoMuxer = new VideoMuxer(`${this.outputFilename}${suffix ? `_${suffix}` : ''}.mp4`);
+            videoMuxer.addVideoTracks(new VideoSequence({
+                path: videoFileListPath
+            }));
+            videoMuxer.addAudioTracks(new AudioSequence({
+                path: audioFileListPath
+            }));
+            videoMuxer.on('success', outputFilename => resolve(outputFilename));
             videoMuxer.on('fail', () => {
                 reject();
             });
