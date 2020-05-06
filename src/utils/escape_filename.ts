@@ -1,5 +1,5 @@
 const escapeFilename = (filename: string) => {
-    return filename.replace(/[\/\*\\\:|\?<>]/ig, "");
+    return filename.replace(/[\/\*\\\:|\?<>"]/ig, "");
 }
 
 export default escapeFilename;

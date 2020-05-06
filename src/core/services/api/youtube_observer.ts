@@ -108,6 +108,10 @@ class YouTubeObserver extends EventEmitter {
         const newVideoUrls = [];
         for (const url of selectedVideoTrack.urls) {
             const id = parseInt(url.match(/sq\/(.+)\//)[1]);
+            if (isNaN(id)) {
+                logger.warning(`遇到了奇怪的URL 请截图给开发者：${url}`);
+                continue;
+            } 
             if (!this.videoUrlFlags[id]) {
                 newVideoUrls.push({
                     id,
@@ -122,6 +126,10 @@ class YouTubeObserver extends EventEmitter {
         const newAudioUrls = [];
         for (const url of selectedAudioTrack.urls) {
             const id = parseInt(url.match(/sq\/(.+)\//)[1]);
+            if (isNaN(id)) {
+                logger.warning(`遇到了奇怪的URL 请截图给开发者：${url}`);
+                continue;
+            } 
             if (!this.audioUrlFlags[id]) {
                 newAudioUrls.push({
                     id,
