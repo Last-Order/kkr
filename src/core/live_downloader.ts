@@ -194,6 +194,7 @@ class LiveDownloader {
                 this.logger.info(`输出文件${i + 1}: #${seqs[i][0].id}-#${seqs[i][seqs[i].length - 1].id}`);
             }
         }
+        const useSuffix = seqs.length > 1;
         for (let i = 0; i <= seqs.length - 1; i++) {
             if (this.isLowLatencyLiveStream) {
                 // 低延迟直播可以直接二进制连接分片
@@ -205,7 +206,7 @@ class LiveDownloader {
                 await mergeFiles(Array.from(seqs[i], t => t.id).map(id => `${path.resolve(this.workDirectoryName, './audio_download/', id.toString())}`), audioOutputPath);
                 this.logger.info(`混流第 ${i + 1} 个输出文件`)
                 try {
-                    const filename = await this.merge(videoOutputPath, audioOutputPath, i + 1);
+                    const filename = await this.merge(videoOutputPath, audioOutputPath, useSuffix ? i + 1 : undefined);
                     this.outputFiles.push({
                         path: filename,
                         description: `#${seqs[i][0]} - #${seqs[i][seqs[i].length - 1]}`
@@ -230,7 +231,7 @@ class LiveDownloader {
                     ).join('\n')
                 );
                 try {
-                    const filename = await this.mergeSequences(videoListFilename, audioListFilename, i + 1);
+                    const filename = await this.mergeSequences(videoListFilename, audioListFilename, useSuffix ? i + 1 : undefined);
                     this.outputFiles.push({
                         path: filename,
                         description: `#${seqs[i][0].id} - #${seqs[i][seqs[i].length - 1].id}`
