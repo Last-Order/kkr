@@ -233,7 +233,7 @@ class LiveDownloader {
                     const filename = await this.mergeSequences(videoListFilename, audioListFilename, i + 1);
                     this.outputFiles.push({
                         path: filename,
-                        description: `#${seqs[i][0]} - #${seqs[i][seqs[i].length - 1]}`
+                        description: `#${seqs[i][0].id} - #${seqs[i][seqs[i].length - 1].id}`
                     });
                 } catch (e) {
                     this.logger.debug(e);
