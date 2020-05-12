@@ -11,7 +11,7 @@ class YouTubeService {
         if (videoUrl.includes('youtube.com')) {
             videoId = videoUrl.match(/v=(.+?)(&|$)/im)[1];
         } else if (videoUrl.includes('youtu.be')) {
-            videoId = videoUrl.match(/\/(.+?)(&|$)/im)[1];
+            videoId = videoUrl.match(/youtu.be\/(.+?)(&|$)/im)[1];
         } else {
             throw new ParseError(ErrorMessages.CANT_PARSE_VIDEO_URL);
         }

@@ -18,12 +18,15 @@ export class DownloadError extends Error { }
 export interface DownloaderOptions {
     videoUrl: string;
     format?: string;
-    verbose: boolean;
+    verbose?: boolean;
+    keep?: boolean;
 }
 
 class Downloader extends EventEmitter {
     videoUrl: string;
     format: string;
+    keepTemporaryFiles: boolean;
+
     videoChunkUrls: string[];
     audioChunkUrls: string[];
     downloadedVideoChunkFiles: string[];
@@ -35,7 +38,7 @@ class Downloader extends EventEmitter {
     isLowLatencyLiveStream: boolean;
     isFFmpegAvailable: boolean;
 
-    constructor({ videoUrl, format, verbose }: Partial<DownloaderOptions>) {
+    constructor({ videoUrl, format, verbose, keep }: Partial<DownloaderOptions>) {
         super();
         this.videoUrl = videoUrl;
         if (format) {
@@ -44,6 +47,9 @@ class Downloader extends EventEmitter {
         this.logger = logger;
         if (verbose) {
             this.logger.enableDebug();
+        }
+        if (keep) {
+            this.keepTemporaryFiles = true;
         }
     }
 
@@ -115,9 +121,10 @@ class Downloader extends EventEmitter {
             );
         }
         videoMuxer.on('success', async () => {
-            this.logger.info(`测试期间不删除临时文件 请手动删除 临时文件位于 ${path.resolve(this.workDirectoryName)}`)
-            // this.logger.info(`混流完成 正删除临时文件`);
-            // await deleteDirectory(this.workDirectoryName);
+            if (!this.keepTemporaryFiles) {
+                this.logger.info(`混流完成 正删除临时文件`);
+                await deleteDirectory(this.workDirectoryName);
+            }
             this.logger.info(`输出文件位于${this.outputFilename}`);
             process.exit();
         });

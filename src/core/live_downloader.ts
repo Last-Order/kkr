@@ -18,8 +18,9 @@ interface Task {
 
 export interface LiveDownloaderOptions {
     videoUrl: string;
-    format: string;
-    verbose: boolean;
+    format?: string;
+    verbose?: boolean;
+    keep?: boolean;
 }
 
 export interface OutputItem {
@@ -28,6 +29,8 @@ export interface OutputItem {
 }
 
 class LiveDownloader {
+    keepTemporaryFiles: boolean;
+
     observer: YouTubeObserver;
     logger: ConsoleLogger;
     workDirectoryName: string;
@@ -43,7 +46,7 @@ class LiveDownloader {
 
     isLowLatencyLiveStream: boolean;
     isFFmpegAvailable: boolean;
-    constructor({ videoUrl, format, verbose }: Partial<LiveDownloaderOptions>) {
+    constructor({ videoUrl, format, verbose, keep }: Partial<LiveDownloaderOptions>) {
         this.observer = new YouTubeObserver({
             videoUrl,
             format
@@ -51,6 +54,9 @@ class LiveDownloader {
         this.logger = Logger;
         if (verbose) {
             this.logger.enableDebug();
+        }
+        if (keep) {
+            this.keepTemporaryFiles = true;
         }
     }
 
@@ -246,9 +252,10 @@ class LiveDownloader {
     }
 
     async clean() {
-        this.logger.info(`测试期间不删除临时文件 请手动删除 临时文件位于 ${path.resolve(this.workDirectoryName)}`);
-        // this.logger.info(`清理临时文件`);
-        // await deleteDirectory(path.resolve(this.workDirectoryName));
+        if (!this.keepTemporaryFiles) {
+            this.logger.info(`清理临时文件`);
+            await deleteDirectory(path.resolve(this.workDirectoryName));
+        }
         this.observer.disconnect();
         if (this.outputFiles.length > 0) {
             if (this.outputFiles.length === 1) {

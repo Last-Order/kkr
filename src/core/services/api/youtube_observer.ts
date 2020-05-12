@@ -20,7 +20,7 @@ class YouTubeObserver extends EventEmitter {
     format: string;
 
     playlistFetchInterval: number = 5000;
-    timer: NodeJS.Timeout;
+    playlistFetchTimer: NodeJS.Timeout;
     audioUrlFlags: boolean[] = [];
     videoUrlFlags: boolean[] = [];
     constructor({ videoUrl, format }) {
@@ -69,11 +69,11 @@ class YouTubeObserver extends EventEmitter {
     }
 
     async disconnect(): Promise<void> {
-        clearInterval(this.timer);
+        clearInterval(this.playlistFetchTimer);
     }
 
     async cycling() {
-        this.timer = setInterval(async () => {
+        this.playlistFetchTimer = setInterval(async () => {
             try {
                 logger.debug('正获取MPD列表');
                 await this.getVideoChunks();
@@ -84,7 +84,7 @@ class YouTubeObserver extends EventEmitter {
             }
         }, this.playlistFetchInterval)
         this.on('end', () => {
-            clearInterval(this.timer);
+            clearInterval(this.playlistFetchTimer);
         });
     }
 

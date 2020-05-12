@@ -4,8 +4,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import Downloader from './core/downloader';
 import LiveDownloader from './core/live_downloader';
-import execCommand from './utils/exec_command';
-import logger from './core/services/logger';
 
 Erii.setMetaInfo({
     name: 'KKR',
@@ -29,7 +27,10 @@ Erii.bind({
         downloader.start();
     } else {
         const videoUrl = ctx.getArgument().toString();
-        const downloader = new Downloader({ videoUrl });
+        const downloader = new Downloader({ 
+            videoUrl,
+            ...options
+        });
         downloader.download();
     }
 });
@@ -38,6 +39,12 @@ Erii.addOption({
     name: ['live'],
     command: 'download',
     description: 'Download live'
+});
+
+Erii.addOption({
+    name: ['keep', ''],
+    command: 'download',
+    description: 'Keep temporary files'
 });
 
 Erii.addOption({
