@@ -52,6 +52,20 @@ Erii.addOption({
     description: 'Debug output'
 });
 
+Erii.bind({
+    name: ['help', 'h'],
+    description: 'Show help documentation',
+}, (ctx) => {
+    ctx.showHelp();
+});
+
+Erii.bind({
+    name: ['version'],
+    description: 'Show version'
+}, (ctx) => {
+    ctx.showVersion();
+});
+
 Erii.default(() => {
     Erii.showHelp();
 });
