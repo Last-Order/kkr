@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import YouTubeService from "./youtube";
-import axios from 'axios';
+import axios from "axios";
 import parseMpd, { ParseResult } from "../../mpd_parser";
 import selectFormat from "../../../utils/select_format";
 import sleep from "../../../utils/sleep";
@@ -36,7 +36,9 @@ class YouTubeObserver extends EventEmitter {
         while (true) {
             try {
                 logger.info(`正在获取视频信息`);
-                const response = await YouTubeService.getHeartbeat(this.videoUrl);
+                const response = await YouTubeService.getHeartbeat(
+                    this.videoUrl
+                );
                 if (response.status === "live_stream_offline") {
                     logger.info(`直播尚未开始：${response.reason}`);
                 } else {
@@ -53,7 +55,11 @@ class YouTubeObserver extends EventEmitter {
         let retries = 3;
         while (retries > 0) {
             try {
-                const { mpdUrl, title, isLowLatencyLiveStream } = await YouTubeService.getVideoInfo(this.videoUrl);
+                const {
+                    mpdUrl,
+                    title,
+                    isLowLatencyLiveStream,
+                } = await YouTubeService.getVideoInfo(this.videoUrl);
                 this.mpdUrl = mpdUrl;
                 if (isLowLatencyLiveStream) {
                     this.playlistFetchInterval = 4000;
@@ -62,7 +68,11 @@ class YouTubeObserver extends EventEmitter {
                 return { mpdUrl, title, isLowLatencyLiveStream };
             } catch (e) {
                 logger.debug(e);
-                logger.warning(`获取视频信息失败${retries < 3 ? ` 第 ${3 - retries} 次重试`: ''}`);
+                logger.warning(
+                    `获取视频信息失败${
+                        retries < 3 ? ` 第 ${3 - retries} 次重试` : ""
+                    }`
+                );
                 retries--;
             }
         }
@@ -75,15 +85,15 @@ class YouTubeObserver extends EventEmitter {
     async cycling() {
         this.playlistFetchTimer = setInterval(async () => {
             try {
-                logger.debug('正获取MPD列表');
+                logger.debug("正获取MPD列表");
                 await this.getVideoChunks();
-                logger.debug('获取MPD列表成功');
+                logger.debug("获取MPD列表成功");
             } catch (e) {
                 logger.debug(e);
                 logger.info("获取MPD列表失败");
             }
-        }, this.playlistFetchInterval)
-        this.on('end', () => {
+        }, this.playlistFetchInterval);
+        this.on("end", () => {
             clearInterval(this.playlistFetchTimer);
         });
     }
@@ -94,34 +104,39 @@ class YouTubeObserver extends EventEmitter {
             const CancelToken = axios.CancelToken;
             const source = CancelToken.source();
             const timer = setTimeout(() => {
-                source.cancel('Timeout');
+                source.cancel("Timeout");
             }, 8000);
-            const mpdStr = (await axios.get(this.mpdUrl, {
-                cancelToken: source.token
-            })).data;
+            const mpdStr = (
+                await axios.get(this.mpdUrl, {
+                    cancelToken: source.token,
+                })
+            ).data;
             clearTimeout(timer);
             parseResult = parseMpd(mpdStr);
         } catch (e) {
             throw new NetworkError("获取MPD列表失败");
         }
-        const { selectedVideoTrack, selectedAudioTrack } = selectFormat(this.format, parseResult);
+        const { selectedVideoTrack, selectedAudioTrack } = selectFormat(
+            this.format,
+            parseResult
+        );
         const newVideoUrls = [];
         for (const url of selectedVideoTrack.urls) {
-            const id = parseInt(url.match(/sq\/(.+)\//)[1]);
+            const id = parseInt(url.match(/\/sq\/(\d+)\//)[1]);
             if (isNaN(id)) {
                 logger.warning(`遇到了奇怪的URL 请截图给开发者：${url}`);
                 continue;
-            } 
+            }
             if (!this.videoUrlFlags[id]) {
                 newVideoUrls.push({
                     id,
-                    url
+                    url,
                 });
                 this.videoUrlFlags[id] = true;
             }
         }
         if (newVideoUrls.length > 0) {
-            this.emit('new-video-chunks', newVideoUrls);
+            this.emit("new-video-chunks", newVideoUrls);
         }
         const newAudioUrls = [];
         for (const url of selectedAudioTrack.urls) {
@@ -129,21 +144,21 @@ class YouTubeObserver extends EventEmitter {
             if (isNaN(id)) {
                 logger.warning(`遇到了奇怪的URL 请截图给开发者：${url}`);
                 continue;
-            } 
+            }
             if (!this.audioUrlFlags[id]) {
                 newAudioUrls.push({
                     id,
-                    url
+                    url,
                 });
                 this.audioUrlFlags[id] = true;
             }
         }
         if (newAudioUrls.length > 0) {
-            this.emit('new-audio-chunks', newAudioUrls);
+            this.emit("new-audio-chunks", newAudioUrls);
         }
-        if (parseResult.rawMpd?.MPD?.attr['@_type'] === 'static') {
+        if (parseResult.rawMpd?.MPD?.attr["@_type"] === "static") {
             // 直播结束
-            this.emit('end');
+            this.emit("end");
         }
     }
 }
