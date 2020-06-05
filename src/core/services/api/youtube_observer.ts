@@ -12,6 +12,8 @@ export interface ConnectResult {
     mpdUrl: string;
     title: string;
     isLowLatencyLiveStream: boolean;
+    latencyClass: string;
+    isLiveDvrEnabled: boolean;
 }
 
 class YouTubeObserver extends EventEmitter {
@@ -59,13 +61,25 @@ class YouTubeObserver extends EventEmitter {
                     mpdUrl,
                     title,
                     isLowLatencyLiveStream,
+                    latencyClass,
+                    isLiveDvrEnabled,
                 } = await YouTubeService.getVideoInfo(this.videoUrl);
                 this.mpdUrl = mpdUrl;
                 if (isLowLatencyLiveStream) {
-                    this.playlistFetchInterval = 4000;
+                    if (latencyClass.endsWith("ULTRA_LOW")) {
+                        this.playlistFetchInterval = 3000;
+                    } else {
+                        this.playlistFetchInterval = 4000;
+                    }
                 }
                 this.cycling();
-                return { mpdUrl, title, isLowLatencyLiveStream };
+                return {
+                    mpdUrl,
+                    title,
+                    isLowLatencyLiveStream,
+                    latencyClass,
+                    isLiveDvrEnabled,
+                };
             } catch (e) {
                 logger.debug(e);
                 logger.warning(
