@@ -46,12 +46,16 @@ class YouTubeService {
             ?.latencyClass as string;
         const isLiveDvrEnabled = !!playerResponse?.videoDetails
             ?.isLiveDvrEnabled;
+        const isPremiumVideo =
+            !!playerResponse?.videoDetails?.isLive &&
+            !playerResponse?.videoDetails?.isLiveContent;
         return {
             title,
             mpdUrl,
             isLowLatencyLiveStream,
             latencyClass,
             isLiveDvrEnabled,
+            isPremiumVideo,
         };
     }
 

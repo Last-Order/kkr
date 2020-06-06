@@ -14,6 +14,7 @@ export interface ConnectResult {
     isLowLatencyLiveStream: boolean;
     latencyClass: string;
     isLiveDvrEnabled: boolean;
+    isPremiumVideo: boolean;
 }
 
 class YouTubeObserver extends EventEmitter {
@@ -63,6 +64,7 @@ class YouTubeObserver extends EventEmitter {
                     isLowLatencyLiveStream,
                     latencyClass,
                     isLiveDvrEnabled,
+                    isPremiumVideo,
                 } = await YouTubeService.getVideoInfo(this.videoUrl);
                 this.mpdUrl = mpdUrl;
                 if (isLowLatencyLiveStream) {
@@ -79,6 +81,7 @@ class YouTubeObserver extends EventEmitter {
                     isLowLatencyLiveStream,
                     latencyClass,
                     isLiveDvrEnabled,
+                    isPremiumVideo,
                 };
             } catch (e) {
                 logger.debug(e);

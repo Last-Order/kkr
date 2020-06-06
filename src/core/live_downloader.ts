@@ -51,6 +51,9 @@ class LiveDownloader {
     finishFlag = false;
 
     isLowLatencyLiveStream: boolean;
+    isLiveDvrEnabled: boolean;
+    isPremiumVideo: boolean;
+    latencyClass: string;
     isFFmpegAvailable: boolean;
     constructor({
         videoUrl,
@@ -94,9 +97,12 @@ class LiveDownloader {
         const connectResult = await this.observer.connect();
         this.logger.info(`视频标题: ${connectResult.title}`);
         this.logger.info(
-            `是否启用DVR: ${connectResult.isLiveDvrEnabled}; 视频延迟模式: ${connectResult.latencyClass}`
+            `是否启用DVR: ${connectResult.isLiveDvrEnabled}; 低延迟视频: ${connectResult.isLowLatencyLiveStream}; 视频延迟模式: ${connectResult.latencyClass}; 是否为首播: ${connectResult.isPremiumVideo}`
         );
+        this.isLiveDvrEnabled = connectResult.isLiveDvrEnabled;
         this.isLowLatencyLiveStream = connectResult.isLowLatencyLiveStream;
+        this.latencyClass = connectResult.latencyClass;
+        this.isPremiumVideo = connectResult.isPremiumVideo;
         this.outputFilename = escapeFilename(`${connectResult.title}`);
         this.observer.on("new-video-chunks", (urls) => {
             this.unfinishedTasks.push(
@@ -246,7 +252,7 @@ class LiveDownloader {
         }
         const useSuffix = seqs.length > 1;
         for (let i = 0; i <= seqs.length - 1; i++) {
-            if (this.isLowLatencyLiveStream) {
+            if (!this.isPremiumVideo) {
                 // 低延迟直播可以直接二进制连接分片
                 const videoOutputPath = path.resolve(
                     this.workDirectoryName,
