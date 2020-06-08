@@ -12,8 +12,11 @@ import {
     AudioSequence,
 } from "../utils/video_muxer";
 import deleteDirectory from "../utils/delete_directory";
-import { isFFmpegAvailable } from "../utils/system";
+import { isFFmpegAvailable, isFFprobeAvailable } from "../utils/system";
 import mergeFiles from "../utils/merge_files";
+import analyseConcatMethod, {
+    ConcatMethod,
+} from "../utils/analyse_concat_method";
 interface Task {
     type: "video" | "audio";
     url: string;
@@ -55,6 +58,7 @@ class LiveDownloader {
     isPremiumVideo: boolean;
     latencyClass: string;
     isFFmpegAvailable: boolean;
+    isFFprobeAvailable: boolean;
     constructor({
         videoUrl,
         format,
@@ -76,8 +80,15 @@ class LiveDownloader {
 
     async start() {
         this.isFFmpegAvailable = await isFFmpegAvailable();
+        this.isFFprobeAvailable = await isFFprobeAvailable();
         if (!this.isFFmpegAvailable) {
             this.logger.warning("FFmpeg不可用 视频不会自动合并");
+        }
+        if (!this.isFFprobeAvailable) {
+            this.logger.warning(
+                "FFprobe不可用 无法准确确定合并方式 临时文件将会被保留"
+            );
+            this.keepTemporaryFiles = true;
         }
         this.workDirectoryName = `kkr_download_${new Date().valueOf()}`;
         fs.mkdirSync(this.workDirectoryName);
@@ -250,10 +261,67 @@ class LiveDownloader {
                 );
             }
         }
+        // 决定合并模式
+        let useDirectConcat = true;
+        let concatMethodGuessing = false;
+
+        if (!this.isFFprobeAvailable) {
+            this.logger.warning(
+                "FFprobe不可用 无法从视频信息分析合并模式 将进行自动分析 自动分析结果可能错误 临时文件将不会被删除"
+            );
+            concatMethodGuessing = true;
+        } else {
+            if (seqs.flat().length === 1) {
+                // 仅有一个块 不分析直接pass
+            } else {
+                const result = await analyseConcatMethod(
+                    path.resolve(
+                        this.workDirectoryName,
+                        "./video_download",
+                        seqs.flat()[0].id.toString()
+                    ),
+                    path.resolve(
+                        this.workDirectoryName,
+                        "./video_download",
+                        seqs.flat()[1].id.toString()
+                    )
+                );
+                if (result === ConcatMethod.FFMPEG_CONCAT) {
+                    useDirectConcat = false;
+                }
+                if (result === ConcatMethod.UNKNOWN) {
+                    this.logger.warning(
+                        `FFprobe分析视频内容失败 自动分析结果可能错误 临时文件将不会被删除`
+                    );
+                    concatMethodGuessing = true;
+                }
+            }
+        }
+
+        if (concatMethodGuessing) {
+            this.logger.info(`kkr决定猜一下合并方法`);
+            // 自动猜测合并方式
+            if (this.isPremiumVideo) {
+                this.logger.info(
+                    `由于本视频为首播视频 kkr觉得应该使用合并模式${ConcatMethod.FFMPEG_CONCAT}`
+                );
+                useDirectConcat = false;
+            } else {
+                if (!this.isLowLatencyLiveStream) {
+                    this.logger.info(
+                        `由于本视频为非低延迟视频 kkr觉得应该使用合并模式${ConcatMethod.FFMPEG_CONCAT}`
+                    );
+                    useDirectConcat = false;
+                } else {
+                    this.logger.info(
+                        `kkr觉得这个视频可以使用合并模式${ConcatMethod.DIRECT_CONCAT}`
+                    );
+                }
+            }
+        }
         const useSuffix = seqs.length > 1;
         for (let i = 0; i <= seqs.length - 1; i++) {
-            if (!this.isPremiumVideo) {
-                // 低延迟直播可以直接二进制连接分片
+            if (useDirectConcat) {
                 const videoOutputPath = path.resolve(
                     this.workDirectoryName,
                     `./video_download/video_merge_${i}.mp4`

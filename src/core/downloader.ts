@@ -17,7 +17,10 @@ import deleteDirectory from "../utils/delete_directory";
 import selectFormat from "../utils/select_format";
 import escapeFilename from "../utils/escape_filename";
 import logger, { ConsoleLogger } from "./services/logger";
-import { isFFmpegAvailable } from "../utils/system";
+import { isFFmpegAvailable, isFFprobeAvailable } from "../utils/system";
+import analyseConcatMethod, {
+    ConcatMethod,
+} from "../utils/analyse_concat_method";
 
 export class DownloadError extends Error {}
 
@@ -44,6 +47,7 @@ class Downloader extends EventEmitter {
     isLowLatencyLiveStream: boolean;
     isPremiumVideo: boolean;
     isFFmpegAvailable: boolean;
+    isFFprobeAvailable: boolean;
 
     constructor({
         videoUrl,
@@ -67,8 +71,15 @@ class Downloader extends EventEmitter {
 
     async download() {
         this.isFFmpegAvailable = await isFFmpegAvailable();
+        this.isFFprobeAvailable = await isFFprobeAvailable();
         if (!this.isFFmpegAvailable) {
             this.logger.warning("FFmpeg不可用 视频不会自动合并");
+        }
+        if (!this.isFFprobeAvailable) {
+            this.logger.warning(
+                "FFprobe不可用 无法准确确定合并方式 临时文件将会被保留"
+            );
+            this.keepTemporaryFiles = true;
         }
         // 解析视频信息
         this.logger.info("正在获取视频信息");
@@ -117,8 +128,65 @@ class Downloader extends EventEmitter {
             process.exit();
         }
         this.logger.info(`准备混流输出文件`);
+        let useDirectConcat = true;
+        let concatMethodGuessing = false;
+        if (!this.isFFprobeAvailable) {
+            this.logger.warning(
+                "FFprobe不可用 无法从视频信息分析合并模式 将进行自动分析 自动分析结果可能错误 临时文件将不会被删除"
+            );
+            concatMethodGuessing = true;
+        } else {
+            if (this.downloadedVideoChunkFiles.length === 1) {
+                // pass
+            } else {
+                const result = await analyseConcatMethod(
+                    path.resolve(
+                        this.workDirectoryName,
+                        "./video_download",
+                        this.downloadedVideoChunkFiles[0]
+                    ),
+                    path.resolve(
+                        this.workDirectoryName,
+                        "./video_download",
+                        this.downloadedVideoChunkFiles[1]
+                    )
+                );
+                if (result === ConcatMethod.FFMPEG_CONCAT) {
+                    useDirectConcat = false;
+                }
+                if (result === ConcatMethod.UNKNOWN) {
+                    this.logger.warning(
+                        `FFprobe分析视频内容失败 自动分析结果可能错误 临时文件将不会被删除`
+                    );
+                    concatMethodGuessing = true;
+                }
+            }
+        }
+
+        if (concatMethodGuessing) {
+            this.logger.info(`kkr决定猜一下合并方法`);
+            // 自动猜测合并方式
+            if (this.isPremiumVideo) {
+                this.logger.info(
+                    `由于本视频为首播视频 kkr觉得应该使用合并模式${ConcatMethod.FFMPEG_CONCAT}`
+                );
+                useDirectConcat = false;
+            } else {
+                if (!this.isLowLatencyLiveStream) {
+                    this.logger.info(
+                        `由于本视频为非低延迟视频 kkr觉得应该使用合并模式${ConcatMethod.FFMPEG_CONCAT}`
+                    );
+                    useDirectConcat = false;
+                } else {
+                    this.logger.info(
+                        `kkr觉得这个视频可以使用合并模式${ConcatMethod.DIRECT_CONCAT}`
+                    );
+                }
+            }
+        }
+
         const videoMuxer = new VideoMuxer(this.outputFilename);
-        if (!this.isPremiumVideo) {
+        if (useDirectConcat) {
             this.logger.info(`合并视频文件`);
             await mergeFiles(
                 this.downloadedVideoChunkFiles.map((f) =>
