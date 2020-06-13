@@ -164,6 +164,7 @@ class Downloader extends EventEmitter {
         }
 
         if (concatMethodGuessing) {
+            this.keepTemporaryFiles = true;
             this.logger.info(`kkr决定猜一下合并方法`);
             // 自动猜测合并方式
             if (this.isPremiumVideo) {
