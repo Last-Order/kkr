@@ -236,10 +236,9 @@ class LiveDownloader {
         // 遍历已下载的视频块
         // 将连续的归为一组 最终将形成大于等于一个输出组
         const seqs: Task[][] = [];
-        if (finishedVideoTasks.length === 1) {
+        seqs.push([finishedVideoTasks[0]]);
+        if (finishedVideoTasks.length !== 1) {
             seqs.push([finishedVideoTasks[0]]);
-        } else {
-            seqs.push([]);
             for (let i = 1; i <= finishedVideoTasks.length - 1; i++) {
                 if (
                     finishedVideoTasks[i].id - finishedVideoTasks[i - 1].id !==
