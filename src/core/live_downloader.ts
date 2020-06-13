@@ -238,7 +238,6 @@ class LiveDownloader {
         const seqs: Task[][] = [];
         seqs.push([finishedVideoTasks[0]]);
         if (finishedVideoTasks.length !== 1) {
-            seqs.push([finishedVideoTasks[0]]);
             for (let i = 1; i <= finishedVideoTasks.length - 1; i++) {
                 if (
                     finishedVideoTasks[i].id - finishedVideoTasks[i - 1].id !==
