@@ -1,6 +1,6 @@
 {
     "name": "kkr",
-    "version": "1.1.4",
+    "version": "1.1.5",
     "description": "",
     "main": "index.js",
     "scripts": {
@@ -25,7 +25,7 @@
         "erii": "^1.2.6",
         "fast-xml-parser": "^3.16.0",
         "rimraf": "^3.0.2",
-        "shua": "^2.0.0"
+        "shua": "^2.0.1"
     },
     "devDependencies": {
         "@types/node": "^13.11.1"
