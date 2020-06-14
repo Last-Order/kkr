@@ -20,7 +20,7 @@ const analyseConcatMethod = (
             }
         }, 25000);
         // Call FFprobe
-        const command = `F:/temp/ffprobe -i "${file2}" -hide_banner -show_packets -print_format json>${file2}.packets`;
+        const command = `ffprobe -i "${file2}" -hide_banner -show_packets -print_format json>${file2}.packets`;
         try {
             await execCommand(command, true);
             const output = JSON.parse(
