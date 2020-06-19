@@ -61,9 +61,20 @@ class YouTubeService {
 
     static async getHeartbeat(videoUrl) {
         const videoId = YouTubeService.getVideoIdByUrl(videoUrl);
-        const API_URL = `https://www.youtube.com/heartbeat?video_id=${videoId}`;
-        const videoInfoResponse = await axios.get(API_URL);
-        return videoInfoResponse.data;
+        const API_URL = `https://www.youtube.com/youtubei/v1/player/heartbeat?alt=json&key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`;
+        const videoInfoResponse = await axios.post(API_URL, {
+            videoId: videoId,
+            context: {
+                client: {
+                    clientName: "WEB",
+                    clientVersion: "2.20200618.01.01",
+                },
+            },
+            heartbeatRequestParams: {
+                heartbeatChecks: ["HEARTBEAT_CHECK_TYPE_LIVE_STREAM_STATUS"],
+            },
+        });
+        return videoInfoResponse.data.playabilityStatus;
     }
 }
 

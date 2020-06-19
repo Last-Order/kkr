@@ -42,7 +42,7 @@ class YouTubeObserver extends EventEmitter {
                 const response = await YouTubeService.getHeartbeat(
                     this.videoUrl
                 );
-                if (response.status === "live_stream_offline") {
+                if (response.status === "LIVE_STREAM_OFFLINE") {
                     logger.info(`直播尚未开始：${response.reason}`);
                 } else {
                     break;
