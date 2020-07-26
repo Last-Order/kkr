@@ -2,8 +2,6 @@
 
 Yet another YouTube DVR downloader!
 
-**注意：本工具仍在测试中！**
-
 ## 依赖
 
 本工具需要 ffmpeg、ffprobe 才能运行。
