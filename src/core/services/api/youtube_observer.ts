@@ -157,7 +157,7 @@ class YouTubeObserver extends EventEmitter {
         }
         const newAudioUrls = [];
         for (const url of selectedAudioTrack.urls) {
-            const id = parseInt(url.match(/sq\/(.+)\//)[1]);
+            const id = parseInt(url.match(/\/sq\/(\d+)\//)[1]);
             if (isNaN(id)) {
                 logger.warning(`遇到了奇怪的URL 请截图给开发者：${url}`);
                 continue;
