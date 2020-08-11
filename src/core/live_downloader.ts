@@ -187,6 +187,7 @@ class LiveDownloader {
             this.nowRunningThreads--;
             this.checkQueue();
         } catch (e) {
+            this.logger.debug(e);
             task.retry++;
             this.nowRunningThreads--;
             this.logger.warning(`${task.type}#${task.id} 下载失败 稍后重试`);
