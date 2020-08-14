@@ -46,7 +46,7 @@ class LiveDownloader {
     outputFilename: string;
     unfinishedTasks: Task[] = [];
     finishedTasks: Task[] = [];
-    dropedTasks: Task[] = [];
+    droppedTasks: Task[] = [];
     outputFiles: OutputItem[] = [];
     maxRunningThreads = 16;
     nowRunningThreads = 0;
@@ -193,6 +193,11 @@ class LiveDownloader {
             this.logger.warning(`${task.type}#${task.id} 下载失败 稍后重试`);
             if (task.retry <= 10) {
                 this.unfinishedTasks.push(task);
+            } else {
+                this.logger.error(
+                    `${task.type}#${task.id} 重试次数达到上限 被放弃`
+                );
+                this.droppedTasks.push(task);
             }
             this.checkQueue();
         }

@@ -23,7 +23,7 @@ export class ConsoleLogger extends Logger {
     }
 
     error(message: string, error?: Error) {
-        console.info(`${message}`);
+        console.error(`${message}`);
         if (error) {
             console.log(error);
         }
