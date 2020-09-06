@@ -94,15 +94,6 @@ class YouTubeObserver extends EventEmitter {
                 retries--;
             }
         }
-        // Fresh MPD URL every hour
-        this.mpdUrlFetchTimer = setInterval(async () => {
-            try {
-                const { mpdUrl } = await YouTubeService.getVideoInfo(
-                    this.videoUrl
-                );
-                this.mpdUrl = mpdUrl;
-            } catch (e) {}
-        }, 3600 * 1000);
     }
 
     async disconnect(): Promise<void> {
@@ -121,6 +112,15 @@ class YouTubeObserver extends EventEmitter {
                 logger.info("获取MPD列表失败");
             }
         }, this.playlistFetchInterval);
+        // Fresh MPD URL every hour
+        this.mpdUrlFetchTimer = setInterval(async () => {
+            try {
+                const { mpdUrl } = await YouTubeService.getVideoInfo(
+                    this.videoUrl
+                );
+                this.mpdUrl = mpdUrl;
+            } catch (e) {}
+        }, 3600 * 1000);
         this.on("end", () => {
             clearInterval(this.playlistFetchTimer);
         });
