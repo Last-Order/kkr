@@ -1,6 +1,6 @@
 {
     "name": "kkr",
-    "version": "1.1.15",
+    "version": "1.1.16",
     "description": "",
     "main": "index.js",
     "scripts": {
@@ -22,7 +22,7 @@
     "dependencies": {
         "axios": "^0.19.2",
         "cli-progress": "^3.7.0",
-        "erii": "^1.2.6",
+        "erii": "^2.0.0",
         "fast-xml-parser": "^3.16.0",
         "rimraf": "^3.0.2",
         "shua": "^2.0.1"

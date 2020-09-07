@@ -70,7 +70,7 @@ class YouTubeObserver extends EventEmitter {
                 this.mpdUrl = mpdUrl;
                 if (isLowLatencyLiveStream) {
                     if (latencyClass.endsWith("ULTRA_LOW")) {
-                        this.playlistFetchInterval = 3000;
+                        this.playlistFetchInterval = 2000;
                     } else {
                         this.playlistFetchInterval = 4000;
                     }
