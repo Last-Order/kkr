@@ -22,6 +22,7 @@ export default function mergeFiles(fileList = [], output = "./output.ts") {
                     if (i > lastIndex) {
                         bar.update(i);
                         bar.stop();
+                        writeStream.end();
                         resolve();
                     }
                 });
