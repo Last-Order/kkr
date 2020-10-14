@@ -48,7 +48,7 @@ class LiveDownloader {
     finishedTasks: Task[] = [];
     droppedTasks: Task[] = [];
     outputFiles: OutputItem[] = [];
-    maxRunningThreads = 16;
+    maxRunningThreads = 10;
     nowRunningThreads = 0;
     stopFlag = false;
     finishFlag = false;
