@@ -29,6 +29,7 @@ export interface DownloaderOptions {
     format?: string;
     verbose?: boolean;
     keep?: boolean;
+    threads?: number;
 }
 
 class Downloader extends EventEmitter {
@@ -43,6 +44,7 @@ class Downloader extends EventEmitter {
     workDirectoryName: string;
     outputFilename: string;
     logger: ConsoleLogger;
+    maxThreads = 10;
 
     isLowLatencyLiveStream: boolean;
     isPremiumVideo: boolean;
@@ -54,6 +56,7 @@ class Downloader extends EventEmitter {
         format,
         verbose,
         keep,
+        threads,
     }: Partial<DownloaderOptions>) {
         super();
         this.videoUrl = videoUrl;
@@ -67,9 +70,13 @@ class Downloader extends EventEmitter {
         if (keep) {
             this.keepTemporaryFiles = true;
         }
+        if (threads) {
+            this.maxThreads = threads;
+        }
     }
 
     async download() {
+        this.logger.debug(`使用至多 ${this.maxThreads} 线程下载`);
         this.isFFmpegAvailable = await isFFmpegAvailable();
         this.isFFprobeAvailable = await isFFprobeAvailable();
         if (!this.isFFmpegAvailable) {
@@ -108,11 +115,13 @@ class Downloader extends EventEmitter {
         this.audioChunkUrls = selectedAudioTrack.urls;
         await download(
             this.videoChunkUrls,
-            path.resolve(this.workDirectoryName, "./video_download")
+            path.resolve(this.workDirectoryName, "./video_download"),
+            this.maxThreads
         );
         await download(
             this.audioChunkUrls,
-            path.resolve(this.workDirectoryName, "./audio_download")
+            path.resolve(this.workDirectoryName, "./audio_download"),
+            this.maxThreads
         );
         this.downloadedVideoChunkFiles = fs.readdirSync(
             path.resolve(this.workDirectoryName, "./video_download")

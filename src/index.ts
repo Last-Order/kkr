@@ -48,6 +48,16 @@ Erii.addOption({
 });
 
 Erii.addOption({
+    name: ['threads'],
+    command: 'download',
+    description: 'Max download threads',
+    argument: {
+        name: 'n',
+        description: 'Number of threads'
+    }
+})
+
+Erii.addOption({
     name: ['verbose', 'debug'],
     description: 'Debug output'
 });
