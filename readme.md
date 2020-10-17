@@ -16,11 +16,11 @@ Yet another YouTube DVR downloader!
 
 -   直播视频
 
-对于直播视频，使用`--live`选项可以实时录制。
+对于直播视频，使用 `--live` 选项可以实时录制。
 
 -   带有实时回放的直播视频
 
-对于带有实时回放的直播视频，使用`--live`选项可以下载可回放内容并继续跟进录制，不使用`--live`选项可以下载可回放内容。
+对于带有实时回放的直播视频，使用 `--live` 选项可以下载可回放内容并继续跟进录制，不使用 `--live` 选项可以下载可回放内容。
 
 -   刚刚结束的直播/首播视频
 
@@ -37,3 +37,5 @@ Yet another YouTube DVR downloader!
 ## 用法
 
 `kkr -d "https://www.youtube.com/watch?v=BTTq175DJOY" --live`
+
+使用 `--threads <n>` 选项可以控制最大下载线程数。
