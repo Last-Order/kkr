@@ -8,6 +8,8 @@ Yet another YouTube DVR downloader!
 
 缺少 ffmpeg 将不会自动合并，缺少 ffprobe 将无法准确确定视频合并方式。
 
+KKR 需要 Node 11+。
+
 ## 安装
 
 `npm i -g kkr`
