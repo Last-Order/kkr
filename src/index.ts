@@ -42,7 +42,7 @@ Erii.addOption({
 });
 
 Erii.addOption({
-    name: ['keep', ''],
+    name: ['keep', 'k'],
     command: 'download',
     description: 'Keep temporary files'
 });

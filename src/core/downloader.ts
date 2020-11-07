@@ -43,6 +43,7 @@ class Downloader extends EventEmitter {
     downloadedAudioChunkFiles: string[];
     workDirectoryName: string;
     outputFilename: string;
+    verbose: boolean = false;
     logger: ConsoleLogger;
     maxThreads = 10;
 
@@ -116,12 +117,18 @@ class Downloader extends EventEmitter {
         await download(
             this.videoChunkUrls,
             path.resolve(this.workDirectoryName, "./video_download"),
-            this.maxThreads
+            this.maxThreads,
+            {
+                verbose: this.verbose,
+            }
         );
         await download(
             this.audioChunkUrls,
             path.resolve(this.workDirectoryName, "./audio_download"),
-            this.maxThreads
+            this.maxThreads,
+            {
+                verbose: this.verbose,
+            }
         );
         this.downloadedVideoChunkFiles = fs.readdirSync(
             path.resolve(this.workDirectoryName, "./video_download")
