@@ -457,6 +457,9 @@ class LiveDownloader {
                 for (const item of this.outputFiles) {
                     this.logger.info(`${item.description} -> ${item.path}`);
                 }
+                if (this.droppedTasks.length > 0) {
+                    this.logger.info(`有${this.droppedTasks.length}个分块因为重试次数达到上限而被放弃`);
+                }
             }
         }
         process.exit();

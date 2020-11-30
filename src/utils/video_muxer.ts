@@ -1,8 +1,8 @@
 const fs = require('fs');
 const path = require('path');
-import CommandExecuter from './command_executer';
 import { EventEmitter } from 'events';
 import logger from '../core/services/logger';
+import CommandExecuter from './command_executer';
 
 class VideoTrack {
     type = 'video';
