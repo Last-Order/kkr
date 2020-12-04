@@ -31,10 +31,23 @@ class YouTubeService {
                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36",
             },
         });
-        const playerConfig = JSON.parse(
-            videoInfoResponse.data.match(/ytplayer\.config = ({.+?});/)[1]
-        );
-        const playerResponse = JSON.parse(playerConfig.args.player_response);
+        let playerResponse;
+        if (videoInfoResponse.data.match(/ytplayer\.config = ({.+?});/)) {
+            const playerConfig = JSON.parse(
+                videoInfoResponse.data.match(/ytplayer\.config = ({.+?});/)[1]
+            );
+            playerResponse = JSON.parse(playerConfig.args.player_response);
+        } else if (
+            videoInfoResponse.data.match(/ytInitialPlayerResponse = ({.+?});/)
+        ) {
+            playerResponse = JSON.parse(
+                videoInfoResponse.data.match(
+                    /ytInitialPlayerResponse = ({.+?});/
+                )[1]
+            );
+        } else {
+            throw new ParseError("解析视频信息失败");
+        }
         const title = playerResponse?.videoDetails?.title as string;
         if (!playerResponse.streamingData) {
             throw new ParseError(ErrorMessages.NOT_A_LIVE_STREAM);
