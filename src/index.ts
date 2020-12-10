@@ -62,6 +62,11 @@ Erii.addOption({
     description: 'Debug output'
 });
 
+Erii.addOption({
+    name: ['concat-method'],
+    description: 'Concat method'
+})
+
 Erii.bind({
     name: ['help', 'h'],
     description: 'Show help documentation',

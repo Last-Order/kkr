@@ -1,6 +1,6 @@
 const exec = require('child_process').exec;
 const execCommand = (command: string, silent: boolean = false) => {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         let child = exec(command);
         child.stdout.on('data', (data) => {
             !silent && console.log(data);

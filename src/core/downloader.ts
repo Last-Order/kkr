@@ -30,6 +30,7 @@ export interface DownloaderOptions {
     verbose?: boolean;
     keep?: boolean;
     threads?: number;
+    concatMethod?: ConcatMethod;
 }
 
 class Downloader extends EventEmitter {
@@ -46,6 +47,7 @@ class Downloader extends EventEmitter {
     verbose: boolean = false;
     logger: ConsoleLogger;
     maxThreads = 10;
+    concatMethod: ConcatMethod;
 
     isLowLatencyLiveStream: boolean;
     isPremiumVideo: boolean;
@@ -58,6 +60,7 @@ class Downloader extends EventEmitter {
         verbose,
         keep,
         threads,
+        concatMethod
     }: Partial<DownloaderOptions>) {
         super();
         this.videoUrl = videoUrl;
@@ -73,6 +76,9 @@ class Downloader extends EventEmitter {
         }
         if (threads) {
             this.maxThreads = threads;
+        }
+        if (concatMethod) {
+            this.concatMethod = +concatMethod;
         }
     }
 
@@ -146,35 +152,42 @@ class Downloader extends EventEmitter {
         this.logger.info(`准备混流输出文件`);
         let useDirectConcat = true;
         let concatMethodGuessing = false;
-        if (!this.isFFprobeAvailable) {
-            this.logger.warning(
-                "FFprobe不可用 无法从视频信息分析合并模式 将进行自动分析 自动分析结果可能错误 临时文件将不会被删除"
-            );
-            concatMethodGuessing = true;
+
+        if (this.concatMethod) {
+            this.logger.info(`手动指定了合并模式${this.concatMethod}`);
+            useDirectConcat = this.concatMethod === ConcatMethod.DIRECT_CONCAT;
+            concatMethodGuessing = false;
         } else {
-            if (this.downloadedVideoChunkFiles.length === 1) {
-                // pass
-            } else {
-                const result = await analyseConcatMethod(
-                    path.resolve(
-                        this.workDirectoryName,
-                        "./video_download",
-                        this.downloadedVideoChunkFiles[0]
-                    ),
-                    path.resolve(
-                        this.workDirectoryName,
-                        "./video_download",
-                        this.downloadedVideoChunkFiles[1]
-                    )
+            if (!this.isFFprobeAvailable) {
+                this.logger.warning(
+                    "FFprobe不可用 无法从视频信息分析合并模式 将进行自动分析 自动分析结果可能错误 临时文件将不会被删除"
                 );
-                if (result === ConcatMethod.FFMPEG_CONCAT) {
-                    useDirectConcat = false;
-                }
-                if (result === ConcatMethod.UNKNOWN) {
-                    this.logger.warning(
-                        `FFprobe分析视频内容失败 自动分析结果可能错误 临时文件将不会被删除`
+                concatMethodGuessing = true;
+            } else {
+                if (this.downloadedVideoChunkFiles.length === 1) {
+                    // pass
+                } else {
+                    const result = await analyseConcatMethod(
+                        path.resolve(
+                            this.workDirectoryName,
+                            "./video_download",
+                            this.downloadedVideoChunkFiles[0]
+                        ),
+                        path.resolve(
+                            this.workDirectoryName,
+                            "./video_download",
+                            this.downloadedVideoChunkFiles[1]
+                        )
                     );
-                    concatMethodGuessing = true;
+                    if (result === ConcatMethod.FFMPEG_CONCAT) {
+                        useDirectConcat = false;
+                    }
+                    if (result === ConcatMethod.UNKNOWN) {
+                        this.logger.warning(
+                            `FFprobe分析视频内容失败 自动分析结果可能错误 临时文件将不会被删除`
+                        );
+                        concatMethodGuessing = true;
+                    }
                 }
             }
         }

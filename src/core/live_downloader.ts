@@ -31,6 +31,7 @@ export interface LiveDownloaderOptions {
     verbose?: boolean;
     keep?: boolean;
     threads?: number;
+    concatMethod?: ConcatMethod;
 }
 
 export interface OutputItem {
@@ -51,6 +52,7 @@ class LiveDownloader {
     outputFiles: OutputItem[] = [];
     maxRunningThreads = 10;
     nowRunningThreads = 0;
+    concatMethod: ConcatMethod;
     stopFlag = false;
     finishFlag = false;
 
@@ -66,6 +68,7 @@ class LiveDownloader {
         verbose,
         keep,
         threads,
+        concatMethod,
     }: Partial<LiveDownloaderOptions>) {
         this.observer = new YouTubeObserver({
             videoUrl,
@@ -81,6 +84,9 @@ class LiveDownloader {
         if (threads) {
             this.maxRunningThreads = threads;
         }
+        if (concatMethod) {
+            this.concatMethod = concatMethod;
+        }
     }
 
     async start() {
@@ -90,11 +96,16 @@ class LiveDownloader {
         if (!this.isFFmpegAvailable) {
             this.logger.warning("FFmpeg不可用 视频不会自动合并");
         }
-        if (!this.isFFprobeAvailable) {
+        if (!this.isFFprobeAvailable && !this.concatMethod) {
             this.logger.warning(
                 "FFprobe不可用 无法准确确定合并方式 临时文件将会被保留"
             );
             this.keepTemporaryFiles = true;
+        }
+        if (this.concatMethod) {
+            this.logger.warning(
+                `手动指定了合并方式${this.concatMethod} 希望你清楚这么做的效果`
+            );
         }
         this.workDirectoryName = `kkr_download_${new Date().valueOf()}`;
         fs.mkdirSync(this.workDirectoryName);
@@ -275,35 +286,40 @@ class LiveDownloader {
         let useDirectConcat = true;
         let concatMethodGuessing = false;
 
-        if (!this.isFFprobeAvailable) {
-            this.logger.warning(
-                "FFprobe不可用 无法从视频信息分析合并模式 将进行自动分析 自动分析结果可能错误 临时文件将不会被删除"
-            );
-            concatMethodGuessing = true;
+        if (this.concatMethod) {
+            useDirectConcat = this.concatMethod === ConcatMethod.DIRECT_CONCAT;
+            concatMethodGuessing = false;
         } else {
-            if (seqs.flat().length === 1) {
-                // 仅有一个块 不分析直接pass
-            } else {
-                const result = await analyseConcatMethod(
-                    path.resolve(
-                        this.workDirectoryName,
-                        "./video_download",
-                        seqs.flat()[0].id.toString()
-                    ),
-                    path.resolve(
-                        this.workDirectoryName,
-                        "./video_download",
-                        seqs.flat()[1].id.toString()
-                    )
+            if (!this.isFFprobeAvailable) {
+                this.logger.warning(
+                    "FFprobe不可用 无法从视频信息分析合并模式 将进行自动分析 自动分析结果可能错误 临时文件将不会被删除"
                 );
-                if (result === ConcatMethod.FFMPEG_CONCAT) {
-                    useDirectConcat = false;
-                }
-                if (result === ConcatMethod.UNKNOWN) {
-                    this.logger.warning(
-                        `FFprobe分析视频内容失败 自动分析结果可能错误 临时文件将不会被删除`
+                concatMethodGuessing = true;
+            } else {
+                if (seqs.flat().length === 1) {
+                    // 仅有一个块 不分析直接pass
+                } else {
+                    const result = await analyseConcatMethod(
+                        path.resolve(
+                            this.workDirectoryName,
+                            "./video_download",
+                            seqs.flat()[0].id.toString()
+                        ),
+                        path.resolve(
+                            this.workDirectoryName,
+                            "./video_download",
+                            seqs.flat()[1].id.toString()
+                        )
                     );
-                    concatMethodGuessing = true;
+                    if (result === ConcatMethod.FFMPEG_CONCAT) {
+                        useDirectConcat = false;
+                    }
+                    if (result === ConcatMethod.UNKNOWN) {
+                        this.logger.warning(
+                            `FFprobe分析视频内容失败 自动分析结果可能错误 临时文件将不会被删除`
+                        );
+                        concatMethodGuessing = true;
+                    }
                 }
             }
         }
@@ -458,7 +474,9 @@ class LiveDownloader {
                     this.logger.info(`${item.description} -> ${item.path}`);
                 }
                 if (this.droppedTasks.length > 0) {
-                    this.logger.info(`有${this.droppedTasks.length}个分块因为重试次数达到上限而被放弃`);
+                    this.logger.info(
+                        `有${this.droppedTasks.length}个分块因为重试次数达到上限而被放弃`
+                    );
                 }
             }
         }

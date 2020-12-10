@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 export default function mergeFiles(fileList = [], output = "./output.ts") {
     const cliProgress = require('cli-progress');
-    return new Promise(async (resolve) => {
+    return new Promise<void>(async (resolve) => {
         if (fileList.length === 0) {
             resolve();
         }
