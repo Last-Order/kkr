@@ -7,10 +7,7 @@ export enum ConcatMethod {
     "FFMPEG_CONCAT",
 }
 
-const analyseConcatMethod = (
-    file1: string,
-    file2: string
-): Promise<ConcatMethod> => {
+const analyseConcatMethod = (file1: string, file2: string): Promise<ConcatMethod> => {
     return new Promise(async (resolve, reject) => {
         let isTimeout = false;
         setTimeout(() => {
@@ -23,9 +20,7 @@ const analyseConcatMethod = (
         const command = `ffprobe -i "${file2}" -hide_banner -show_packets -print_format json>${file2}.packets`;
         try {
             await execCommand(command, true);
-            const output = JSON.parse(
-                fs.readFileSync(`${file2}.packets`).toString()
-            );
+            const output = JSON.parse(fs.readFileSync(`${file2}.packets`).toString());
             if (output.packets[0].pts === 0) {
                 resolve(ConcatMethod.FFMPEG_CONCAT);
             } else {

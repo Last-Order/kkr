@@ -1,11 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-import { EventEmitter } from 'events';
-import logger from '../core/services/logger';
-import CommandExecuter from './command_executer';
+const fs = require("fs");
+const path = require("path");
+import { EventEmitter } from "events";
+import logger from "../core/services/logger";
+import CommandExecuter from "./command_executer";
 
 class VideoTrack {
-    type = 'video';
+    type = "video";
     path: string;
     constructor({ path }) {
         this.path = path;
@@ -13,7 +13,7 @@ class VideoTrack {
 }
 
 class VideoSequence {
-    type = 'video_sequence';
+    type = "video_sequence";
     path: string;
     constructor({ path }) {
         this.path = path;
@@ -21,7 +21,7 @@ class VideoSequence {
 }
 
 class AudioTrack {
-    type = 'audio';
+    type = "audio";
     path: string;
     constructor({ path }) {
         this.path = path;
@@ -29,7 +29,7 @@ class AudioTrack {
 }
 
 class AudioSequence {
-    type = 'audio_sequence';
+    type = "audio_sequence";
     path: string;
     constructor({ path }) {
         this.path = path;
@@ -48,7 +48,7 @@ class VideoMuxer extends EventEmitter {
     constructor(outputPath) {
         super();
         if (!outputPath) {
-            throw new Error('请指定输出路径');
+            throw new Error("请指定输出路径");
         }
         const parsedPath = path.parse(outputPath);
         this.outputPathName = parsedPath.name;
@@ -70,10 +70,10 @@ class VideoMuxer extends EventEmitter {
     }
     async run() {
         const allTracks = [...this.videoTracks, ...this.audioTracks, ...this.videoSequences, ...this.audioSequences];
-        let command = 'ffmpeg ';
+        let command = "ffmpeg ";
         // Add input
         for (const track of allTracks) {
-            if (track.type === 'video_sequence' || track.type === 'audio_sequence') {
+            if (track.type === "video_sequence" || track.type === "audio_sequence") {
                 command += `-f concat -safe 0 -i "${track.path}" `;
             } else {
                 command += `-i "${track.path}" `;
@@ -82,45 +82,39 @@ class VideoMuxer extends EventEmitter {
         // Add map settings
         for (let i = 0; i <= allTracks.length - 1; i++) {
             const nowTrack = allTracks[i];
-            if (nowTrack.type.startsWith('video')) {
+            if (nowTrack.type.startsWith("video")) {
                 command += `-map ${i}:v `;
             }
-            if (nowTrack.type.startsWith('audio')) {
+            if (nowTrack.type.startsWith("audio")) {
                 command += `-map ${i}:a `;
             }
         }
         if (fs.existsSync(`${this.outputPathName}${this.outputPathExt}`)) {
             this.outputPathName = this.outputPathName + `_${new Date().valueOf().toString()}`;
         }
-        command += '-loglevel error -stats ';
-        if (this.outputPath.endsWith('.mkv')) {
+        command += "-loglevel error -stats ";
+        if (this.outputPath.endsWith(".mkv")) {
             command += `-c copy -reserve_index_space 200k "${this.outputPathName}${this.outputPathExt}"`;
-        } else if (this.outputPath.endsWith('.mp4')) {
+        } else if (this.outputPath.endsWith(".mp4")) {
             command += `-c copy -movflags faststart "${this.outputPathName}${this.outputPathExt}"`;
         }
-        this.commandExecuter.on('stderr', (data) => {
+        this.commandExecuter.on("stderr", (data) => {
             logger.info(data);
-            this.emit('stderr', data);
+            this.emit("stderr", data);
         });
-        this.commandExecuter.on('fail', (child) => {
-            this.emit('fail', child);
+        this.commandExecuter.on("fail", (child) => {
+            this.emit("fail", child);
         });
-        this.commandExecuter.on('success', () => {
-            this.emit('success', `${this.outputPathName}${this.outputPathExt}`);
+        this.commandExecuter.on("success", () => {
+            this.emit("success", `${this.outputPathName}${this.outputPathExt}`);
         });
-        this.commandExecuter.on('start', (child) => {
-            this.emit('start');
+        this.commandExecuter.on("start", (child) => {
+            this.emit("start");
         });
         this.commandExecuter.run(command, {
-            output: ['stderr']
+            output: ["stderr"],
         });
     }
 }
 
-export {
-    VideoTrack,
-    AudioTrack,
-    VideoSequence,
-    AudioSequence,
-    VideoMuxer
-}
+export { VideoTrack, AudioTrack, VideoSequence, AudioSequence, VideoMuxer };

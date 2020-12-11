@@ -33,18 +33,10 @@ class YouTubeService {
         });
         let playerResponse;
         if (videoInfoResponse.data.match(/ytplayer\.config = ({.+?});/)) {
-            const playerConfig = JSON.parse(
-                videoInfoResponse.data.match(/ytplayer\.config = ({.+?});/)[1]
-            );
+            const playerConfig = JSON.parse(videoInfoResponse.data.match(/ytplayer\.config = ({.+?});/)[1]);
             playerResponse = JSON.parse(playerConfig.args.player_response);
-        } else if (
-            videoInfoResponse.data.match(/ytInitialPlayerResponse = ({.+?});/)
-        ) {
-            playerResponse = JSON.parse(
-                videoInfoResponse.data.match(
-                    /ytInitialPlayerResponse = ({.+?});/
-                )[1]
-            );
+        } else if (videoInfoResponse.data.match(/ytInitialPlayerResponse = ({.+?});/)) {
+            playerResponse = JSON.parse(videoInfoResponse.data.match(/ytInitialPlayerResponse = ({.+?});/)[1]);
         } else {
             throw new ParseError("解析视频信息失败");
         }
@@ -53,15 +45,10 @@ class YouTubeService {
             throw new ParseError(ErrorMessages.NOT_A_LIVE_STREAM);
         }
         const mpdUrl = playerResponse.streamingData.dashManifestUrl as string;
-        const isLowLatencyLiveStream = !!playerResponse?.videoDetails
-            ?.isLowLatencyLiveStream;
-        const latencyClass = playerResponse?.videoDetails
-            ?.latencyClass as string;
-        const isLiveDvrEnabled = !!playerResponse?.videoDetails
-            ?.isLiveDvrEnabled;
-        const isPremiumVideo =
-            !!playerResponse?.videoDetails?.isLive &&
-            !playerResponse?.videoDetails?.isLiveContent;
+        const isLowLatencyLiveStream = !!playerResponse?.videoDetails?.isLowLatencyLiveStream;
+        const latencyClass = playerResponse?.videoDetails?.latencyClass as string;
+        const isLiveDvrEnabled = !!playerResponse?.videoDetails?.isLiveDvrEnabled;
+        const isPremiumVideo = !!playerResponse?.videoDetails?.isLive && !playerResponse?.videoDetails?.isLiveContent;
         return {
             title,
             mpdUrl,

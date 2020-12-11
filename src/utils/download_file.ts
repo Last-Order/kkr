@@ -13,10 +13,7 @@ const download = async (url, dest, { timeout }): Promise<void> => {
         responseType: "arraybuffer",
         cancelToken: source.token,
     });
-    if (
-        response.headers["content-length"] &&
-        +response.headers["content-length"] !== response.data.length
-    ) {
+    if (response.headers["content-length"] && +response.headers["content-length"] !== response.data.length) {
         throw new BadResponseError("下载内容不完整");
     }
     clearTimeout(timer);

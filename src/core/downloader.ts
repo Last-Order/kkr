@@ -5,22 +5,14 @@ import YouTubeService from "./services/api/youtube";
 import axios from "axios";
 import parseMpd from "./mpd_parser";
 import download from "../utils/download_files";
-import {
-    VideoMuxer,
-    VideoSequence,
-    AudioSequence,
-    VideoTrack,
-    AudioTrack,
-} from "../utils/video_muxer";
+import { VideoMuxer, VideoSequence, AudioSequence, VideoTrack, AudioTrack } from "../utils/video_muxer";
 import mergeFiles from "../utils/merge_files";
 import deleteDirectory from "../utils/delete_directory";
 import selectFormat from "../utils/select_format";
 import escapeFilename from "../utils/escape_filename";
 import logger, { ConsoleLogger } from "./services/logger";
 import { isFFmpegAvailable, isFFprobeAvailable } from "../utils/system";
-import analyseConcatMethod, {
-    ConcatMethod,
-} from "../utils/analyse_concat_method";
+import analyseConcatMethod, { ConcatMethod } from "../utils/analyse_concat_method";
 
 export class DownloadError extends Error {}
 
@@ -54,14 +46,7 @@ class Downloader extends EventEmitter {
     isFFmpegAvailable: boolean;
     isFFprobeAvailable: boolean;
 
-    constructor({
-        videoUrl,
-        format,
-        verbose,
-        keep,
-        threads,
-        concatMethod
-    }: Partial<DownloaderOptions>) {
+    constructor({ videoUrl, format, verbose, keep, threads, concatMethod }: Partial<DownloaderOptions>) {
         super();
         this.videoUrl = videoUrl;
         if (format) {
@@ -90,19 +75,14 @@ class Downloader extends EventEmitter {
             this.logger.warning("FFmpeg不可用 视频不会自动合并");
         }
         if (!this.isFFprobeAvailable) {
-            this.logger.warning(
-                "FFprobe不可用 无法准确确定合并方式 临时文件将会被保留"
-            );
+            this.logger.warning("FFprobe不可用 无法准确确定合并方式 临时文件将会被保留");
             this.keepTemporaryFiles = true;
         }
         // 解析视频信息
         this.logger.info("正在获取视频信息");
-        const {
-            title,
-            mpdUrl,
-            isLowLatencyLiveStream,
-            isPremiumVideo,
-        } = await YouTubeService.getVideoInfo(this.videoUrl);
+        const { title, mpdUrl, isLowLatencyLiveStream, isPremiumVideo } = await YouTubeService.getVideoInfo(
+            this.videoUrl
+        );
         this.isLowLatencyLiveStream = isLowLatencyLiveStream;
         this.isPremiumVideo = isPremiumVideo;
         this.outputFilename = escapeFilename(`${title}.mp4`);
@@ -114,39 +94,20 @@ class Downloader extends EventEmitter {
         fs.mkdirSync(this.workDirectoryName);
         fs.mkdirSync(path.resolve(this.workDirectoryName, "./video_download"));
         fs.mkdirSync(path.resolve(this.workDirectoryName, "./audio_download"));
-        const { selectedVideoTrack, selectedAudioTrack } = selectFormat(
-            this.format,
-            parseResult
-        );
+        const { selectedVideoTrack, selectedAudioTrack } = selectFormat(this.format, parseResult);
         this.videoChunkUrls = selectedVideoTrack.urls;
         this.audioChunkUrls = selectedAudioTrack.urls;
-        await download(
-            this.videoChunkUrls,
-            path.resolve(this.workDirectoryName, "./video_download"),
-            this.maxThreads,
-            {
-                verbose: this.verbose,
-            }
-        );
-        await download(
-            this.audioChunkUrls,
-            path.resolve(this.workDirectoryName, "./audio_download"),
-            this.maxThreads,
-            {
-                verbose: this.verbose,
-            }
-        );
-        this.downloadedVideoChunkFiles = fs.readdirSync(
-            path.resolve(this.workDirectoryName, "./video_download")
-        );
-        this.downloadedAudioChunkFiles = fs.readdirSync(
-            path.resolve(this.workDirectoryName, "./audio_download")
-        );
+        await download(this.videoChunkUrls, path.resolve(this.workDirectoryName, "./video_download"), this.maxThreads, {
+            verbose: this.verbose,
+        });
+        await download(this.audioChunkUrls, path.resolve(this.workDirectoryName, "./audio_download"), this.maxThreads, {
+            verbose: this.verbose,
+        });
+        this.downloadedVideoChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, "./video_download"));
+        this.downloadedAudioChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, "./audio_download"));
         if (!this.isFFmpegAvailable) {
             this.logger.error("FFmpeg不可用 请手动合并文件");
-            this.logger.error(
-                `临时文件目录位于 ${path.resolve(this.workDirectoryName)}`
-            );
+            this.logger.error(`临时文件目录位于 ${path.resolve(this.workDirectoryName)}`);
             process.exit();
         }
         this.logger.info(`准备混流输出文件`);
@@ -168,24 +129,14 @@ class Downloader extends EventEmitter {
                     // pass
                 } else {
                     const result = await analyseConcatMethod(
-                        path.resolve(
-                            this.workDirectoryName,
-                            "./video_download",
-                            this.downloadedVideoChunkFiles[0]
-                        ),
-                        path.resolve(
-                            this.workDirectoryName,
-                            "./video_download",
-                            this.downloadedVideoChunkFiles[1]
-                        )
+                        path.resolve(this.workDirectoryName, "./video_download", this.downloadedVideoChunkFiles[0]),
+                        path.resolve(this.workDirectoryName, "./video_download", this.downloadedVideoChunkFiles[1])
                     );
                     if (result === ConcatMethod.FFMPEG_CONCAT) {
                         useDirectConcat = false;
                     }
                     if (result === ConcatMethod.UNKNOWN) {
-                        this.logger.warning(
-                            `FFprobe分析视频内容失败 自动分析结果可能错误 临时文件将不会被删除`
-                        );
+                        this.logger.warning(`FFprobe分析视频内容失败 自动分析结果可能错误 临时文件将不会被删除`);
                         concatMethodGuessing = true;
                     }
                 }
@@ -197,20 +148,14 @@ class Downloader extends EventEmitter {
             this.logger.info(`kkr决定猜一下合并方法`);
             // 自动猜测合并方式
             if (this.isPremiumVideo) {
-                this.logger.info(
-                    `由于本视频为首播视频 kkr觉得应该使用合并模式${ConcatMethod.FFMPEG_CONCAT}`
-                );
+                this.logger.info(`由于本视频为首播视频 kkr觉得应该使用合并模式${ConcatMethod.FFMPEG_CONCAT}`);
                 useDirectConcat = false;
             } else {
                 if (!this.isLowLatencyLiveStream) {
-                    this.logger.info(
-                        `由于本视频为非低延迟视频 kkr觉得应该使用合并模式${ConcatMethod.FFMPEG_CONCAT}`
-                    );
+                    this.logger.info(`由于本视频为非低延迟视频 kkr觉得应该使用合并模式${ConcatMethod.FFMPEG_CONCAT}`);
                     useDirectConcat = false;
                 } else {
-                    this.logger.info(
-                        `kkr觉得这个视频可以使用合并模式${ConcatMethod.DIRECT_CONCAT}`
-                    );
+                    this.logger.info(`kkr觉得这个视频可以使用合并模式${ConcatMethod.DIRECT_CONCAT}`);
                 }
             }
         }
@@ -219,81 +164,45 @@ class Downloader extends EventEmitter {
         if (useDirectConcat) {
             this.logger.info(`合并视频文件`);
             await mergeFiles(
-                this.downloadedVideoChunkFiles.map((f) =>
-                    path.resolve(this.workDirectoryName, "./video_download", f)
-                ),
-                path.resolve(
-                    this.workDirectoryName,
-                    "./video_download/video.mp4"
-                )
+                this.downloadedVideoChunkFiles.map((f) => path.resolve(this.workDirectoryName, "./video_download", f)),
+                path.resolve(this.workDirectoryName, "./video_download/video.mp4")
             );
             this.logger.info(`合并音频文件`);
             await mergeFiles(
-                this.downloadedAudioChunkFiles.map((f) =>
-                    path.resolve(this.workDirectoryName, "./audio_download", f)
-                ),
-                path.resolve(
-                    this.workDirectoryName,
-                    "./audio_download/audio.mp4"
-                )
+                this.downloadedAudioChunkFiles.map((f) => path.resolve(this.workDirectoryName, "./audio_download", f)),
+                path.resolve(this.workDirectoryName, "./audio_download/audio.mp4")
             );
             videoMuxer.addVideoTracks(
                 new VideoTrack({
-                    path: path.resolve(
-                        this.workDirectoryName,
-                        "./video_download/video.mp4"
-                    ),
+                    path: path.resolve(this.workDirectoryName, "./video_download/video.mp4"),
                 })
             );
             videoMuxer.addAudioTracks(
                 new AudioTrack({
-                    path: path.resolve(
-                        this.workDirectoryName,
-                        "./audio_download/audio.mp4"
-                    ),
+                    path: path.resolve(this.workDirectoryName, "./audio_download/audio.mp4"),
                 })
             );
         } else {
             fs.writeFileSync(
                 path.resolve(this.workDirectoryName, "video_files.txt"),
                 this.downloadedVideoChunkFiles
-                    .map(
-                        (f) =>
-                            `file '${path.resolve(
-                                this.workDirectoryName,
-                                "./video_download",
-                                f
-                            )}'`
-                    )
+                    .map((f) => `file '${path.resolve(this.workDirectoryName, "./video_download", f)}'`)
                     .join("\n")
             );
             fs.writeFileSync(
                 path.resolve(this.workDirectoryName, "audio_files.txt"),
                 this.downloadedVideoChunkFiles
-                    .map(
-                        (f) =>
-                            `file '${path.resolve(
-                                this.workDirectoryName,
-                                "./audio_download",
-                                f
-                            )}'`
-                    )
+                    .map((f) => `file '${path.resolve(this.workDirectoryName, "./audio_download", f)}'`)
                     .join("\n")
             );
             videoMuxer.addVideoSequences(
                 new VideoSequence({
-                    path: path.resolve(
-                        this.workDirectoryName,
-                        "video_files.txt"
-                    ),
+                    path: path.resolve(this.workDirectoryName, "video_files.txt"),
                 })
             );
             videoMuxer.addAudioSequences(
                 new AudioSequence({
-                    path: path.resolve(
-                        this.workDirectoryName,
-                        "audio_files.txt"
-                    ),
+                    path: path.resolve(this.workDirectoryName, "audio_files.txt"),
                 })
             );
         }
