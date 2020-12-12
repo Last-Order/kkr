@@ -61,13 +61,20 @@ Erii.addOption({
 });
 
 Erii.addOption({
-    name: ["verbose", "debug"],
-    description: "Debug output",
+    name: ["concat-method"],
+    command: "download",
+    description: "Concat method",
 });
 
 Erii.addOption({
-    name: ["concat-method"],
-    description: "Concat method",
+    name: ["force-merge"],
+    command: "download",
+    description: "Ignore missing chunks and merge all downloaded chunks to a single file (Live mode only)",
+});
+
+Erii.addOption({
+    name: ["verbose", "debug"],
+    description: "Debug output",
 });
 
 Erii.bind(

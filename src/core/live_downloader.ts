@@ -24,6 +24,7 @@ export interface LiveDownloaderOptions {
     keep?: boolean;
     threads?: number;
     concatMethod?: ConcatMethod;
+    forceMerge?: boolean;
 }
 
 export interface OutputItem {
@@ -45,6 +46,7 @@ class LiveDownloader {
     maxRunningThreads = 10;
     nowRunningThreads = 0;
     concatMethod: ConcatMethod;
+    forceMerge: boolean = false;
     stopFlag = false;
     finishFlag = false;
 
@@ -54,7 +56,7 @@ class LiveDownloader {
     latencyClass: string;
     isFFmpegAvailable: boolean;
     isFFprobeAvailable: boolean;
-    constructor({ videoUrl, format, verbose, keep, threads, concatMethod }: Partial<LiveDownloaderOptions>) {
+    constructor({ videoUrl, format, verbose, keep, threads, concatMethod, forceMerge }: Partial<LiveDownloaderOptions>) {
         this.observer = new YouTubeObserver({
             videoUrl,
             format,
@@ -71,6 +73,9 @@ class LiveDownloader {
         }
         if (concatMethod) {
             this.concatMethod = concatMethod;
+        }
+        if (forceMerge) {
+            this.forceMerge = forceMerge;
         }
     }
 
@@ -221,7 +226,7 @@ class LiveDownloader {
         }
         // 遍历已下载的视频块
         // 将连续的归为一组 最终将形成大于等于一个输出组
-        const seqs: Task[][] = [];
+        let seqs: Task[][] = [];
         seqs.push([finishedVideoTasks[0]]);
         if (finishedVideoTasks.length !== 1) {
             for (let i = 1; i <= finishedVideoTasks.length - 1; i++) {
@@ -233,9 +238,13 @@ class LiveDownloader {
         }
         // 当形成了大于1个输出组的时候 打印输出列表
         if (seqs.length > 1) {
-            this.logger.info("序列不连续 将输出多个文件");
-            for (let i = 0; i <= seqs.length - 1; i++) {
-                this.logger.info(`输出文件${i + 1}: #${seqs[i][0].id}-#${seqs[i][seqs[i].length - 1].id}`);
+            if (this.forceMerge) {
+                seqs = [seqs.flat()];
+            } else {
+                this.logger.info("序列不连续 将输出多个文件");
+                for (let i = 0; i <= seqs.length - 1; i++) {
+                    this.logger.info(`输出文件${i + 1}: #${seqs[i][0].id}-#${seqs[i][seqs[i].length - 1].id}`);
+                }
             }
         }
         // 决定合并模式
