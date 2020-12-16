@@ -83,6 +83,9 @@ class Downloader extends EventEmitter {
         const { title, mpdUrl, isLowLatencyLiveStream, isPremiumVideo } = await YouTubeService.getVideoInfo(
             this.videoUrl
         );
+        if (!mpdUrl) {
+            throw new DownloadError("无法获得可用的直播地址");
+        }
         this.isLowLatencyLiveStream = isLowLatencyLiveStream;
         this.isPremiumVideo = isPremiumVideo;
         this.outputFilename = escapeFilename(`${title}.mp4`);
