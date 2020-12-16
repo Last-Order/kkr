@@ -62,3 +62,7 @@ Options:
      Options                       Description
      --verbose, debug              Debug output
 ```
+
+### 手动指定合并方法
+
+可以通过`--concat-method`强制指定合并方法，该选项的可选值为`1`或`2`，其中`1`表示二进制连接分块，`2`表示使用`ffmpeg`的`concat`模式连接各分块。
