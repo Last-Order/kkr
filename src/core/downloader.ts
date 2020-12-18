@@ -40,13 +40,15 @@ class Downloader extends EventEmitter {
     logger: ConsoleLogger;
     maxThreads = 10;
     concatMethod: ConcatMethod;
+    sqStart: number;
+    sqEnd: number;
 
     isLowLatencyLiveStream: boolean;
     isPremiumVideo: boolean;
     isFFmpegAvailable: boolean;
     isFFprobeAvailable: boolean;
 
-    constructor({ videoUrl, format, verbose, keep, threads, concatMethod }: Partial<DownloaderOptions>) {
+    constructor(videoUrl, { format, verbose, keep, threads, concatMethod }: Partial<DownloaderOptions>) {
         super();
         this.videoUrl = videoUrl;
         if (format) {
@@ -108,6 +110,7 @@ class Downloader extends EventEmitter {
         });
         this.downloadedVideoChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, "./video_download"));
         this.downloadedAudioChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, "./audio_download"));
+
         if (!this.isFFmpegAvailable) {
             this.logger.error("FFmpeg不可用 请手动合并文件");
             this.logger.error(`临时文件目录位于 ${path.resolve(this.workDirectoryName)}`);

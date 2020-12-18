@@ -56,7 +56,7 @@ class LiveDownloader {
     latencyClass: string;
     isFFmpegAvailable: boolean;
     isFFprobeAvailable: boolean;
-    constructor({ videoUrl, format, verbose, keep, threads, concatMethod, forceMerge }: Partial<LiveDownloaderOptions>) {
+    constructor(videoUrl, { format, verbose, keep, threads, concatMethod, forceMerge }: Partial<LiveDownloaderOptions>) {
         this.observer = new YouTubeObserver({
             videoUrl,
             format,

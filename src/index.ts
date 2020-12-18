@@ -22,17 +22,11 @@ Erii.bind(
     async (ctx, options: any) => {
         if (options.live) {
             const videoUrl = ctx.getArgument().toString();
-            const downloader = new LiveDownloader({
-                videoUrl,
-                ...options,
-            });
+            const downloader = new LiveDownloader(videoUrl, options);
             downloader.start();
         } else {
             const videoUrl = ctx.getArgument().toString();
-            const downloader = new Downloader({
-                videoUrl,
-                ...options,
-            });
+            const downloader = new Downloader(videoUrl, options);
             downloader.download();
         }
     }
