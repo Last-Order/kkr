@@ -20,7 +20,7 @@
     },
     "homepage": "https://github.com/Last-Order/kkr#readme",
     "dependencies": {
-        "axios": "^0.19.2",
+        "axios": "^0.21.1",
         "cli-progress": "^3.7.0",
         "erii": "^2.0.2",
         "fast-xml-parser": "^3.16.0",
