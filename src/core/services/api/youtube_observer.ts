@@ -119,23 +119,18 @@ class YouTubeObserver extends EventEmitter {
     }
 
     async getVideoChunks() {
-        let parseResult: ParseResult;
-        try {
-            const CancelToken = axios.CancelToken;
-            const source = CancelToken.source();
-            const timer = setTimeout(() => {
-                source.cancel("Timeout");
-            }, 8000);
-            const mpdStr = (
-                await axios.get(this.mpdUrl, {
-                    cancelToken: source.token,
-                })
-            ).data;
-            clearTimeout(timer);
-            parseResult = parseMpd(mpdStr);
-        } catch (e) {
-            throw new NetworkError("获取MPD列表失败");
-        }
+        const CancelToken = axios.CancelToken;
+        const source = CancelToken.source();
+        const timer = setTimeout(() => {
+            source.cancel("Timeout");
+        }, 8000);
+        const mpdStr = (
+            await axios.get(this.mpdUrl, {
+                cancelToken: source.token,
+            })
+        ).data;
+        clearTimeout(timer);
+        const parseResult = parseMpd(mpdStr);
         const { selectedVideoTrack, selectedAudioTrack } = selectFormat(this.format, parseResult);
         const newVideoUrls = [];
         for (const url of selectedVideoTrack.urls) {
