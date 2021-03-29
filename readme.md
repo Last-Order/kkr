@@ -41,7 +41,7 @@ KKR 需要 Node 11+。
 `kkr -d "https://www.youtube.com/watch?v=BTTq175DJOY" --live`
 
 ```
-KKR / 1.1.21
+KKR / 1.2.2
 
 Help:
      Commands                      Description                   Alias
@@ -54,6 +54,7 @@ Help:
              <n>                   Number of threads
          --concat-method           Concat method
          --force-merge             Ignore missing chunks and merge all downloaded chunks to a single file (Live mode only)
+         --cooldown                Add cooldown between chunk downloads (Live mode only)
      --help                        Show help documentation       -h
      --version                     Show version
 

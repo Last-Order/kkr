@@ -25,6 +25,7 @@ export interface LiveDownloaderOptions {
     threads?: number;
     concatMethod?: ConcatMethod;
     forceMerge?: boolean;
+    cooldown: number;
 }
 
 export interface OutputItem {
@@ -47,6 +48,7 @@ class LiveDownloader {
     nowRunningThreads = 0;
     concatMethod: ConcatMethod;
     forceMerge: boolean = false;
+    cooldown: number = 0;
     stopFlag = false;
     finishFlag = false;
 
@@ -56,7 +58,10 @@ class LiveDownloader {
     latencyClass: string;
     isFFmpegAvailable: boolean;
     isFFprobeAvailable: boolean;
-    constructor(videoUrl, { format, verbose, keep, threads, concatMethod, forceMerge }: Partial<LiveDownloaderOptions>) {
+    constructor(
+        videoUrl,
+        { format, verbose, keep, threads, concatMethod, forceMerge, cooldown }: Partial<LiveDownloaderOptions>
+    ) {
         this.observer = new YouTubeObserver({
             videoUrl,
             format,
@@ -76,6 +81,9 @@ class LiveDownloader {
         }
         if (forceMerge) {
             this.forceMerge = forceMerge;
+        }
+        if (cooldown) {
+            this.cooldown = cooldown;
         }
     }
 
@@ -390,6 +398,7 @@ class LiveDownloader {
     async handleTask(task: Task) {
         return await download(task.url, task.outputPath, {
             timeout: Math.min(45000, 15000 + 15000 * task.retry),
+            cooldown: this.cooldown,
         });
     }
 

@@ -67,6 +67,12 @@ Erii.addOption({
 });
 
 Erii.addOption({
+    name: ["cooldown"],
+    command: "download",
+    description: "Add cooldown between chunk downloads (Live mode only)",
+});
+
+Erii.addOption({
     name: ["verbose", "debug"],
     description: "Debug output",
 });
