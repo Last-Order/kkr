@@ -83,6 +83,7 @@ class LiveDownloader {
             this.forceMerge = forceMerge;
         }
         if (cooldown) {
+            console.log(cooldown)
             this.cooldown = cooldown;
         }
     }

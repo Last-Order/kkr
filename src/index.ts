@@ -69,6 +69,10 @@ Erii.addOption({
 Erii.addOption({
     name: ["cooldown"],
     command: "download",
+    argument: {
+        name: "time",
+        description: "Cooldown time in milliseconds",
+    },
     description: "Add cooldown between chunk downloads (Live mode only)",
 });
 

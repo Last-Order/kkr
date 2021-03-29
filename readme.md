@@ -54,7 +54,8 @@ Help:
              <n>                   Number of threads
          --concat-method           Concat method
          --force-merge             Ignore missing chunks and merge all downloaded chunks to a single file (Live mode only)
-         --cooldown                Add cooldown between chunk downloads (Live mode only)
+         --cooldown <time>         Add cooldown between chunk downloads (Live mode only)
+             <time>                Cooldown time in milliseconds
      --help                        Show help documentation       -h
      --version                     Show version
 
