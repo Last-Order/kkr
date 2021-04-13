@@ -36,7 +36,11 @@ const parseMpd = (mpdStr): ParseResult => {
             urls: [],
         };
         const baseUrl = videoRepresentation.BaseURL;
-        for (const segmentUrl of videoRepresentation.SegmentList.SegmentURL) {
+        const segmentList = videoRepresentation.SegmentList;
+        if (segmentList.Initialization) {
+            track.urls.push(baseUrl + segmentList.Initialization.attr["@_sourceURL"]);
+        }
+        for (const segmentUrl of segmentList.SegmentURL) {
             track.urls.push(baseUrl + segmentUrl.attr["@_media"]);
         }
         result.videoTracks.push(track);
@@ -51,7 +55,11 @@ const parseMpd = (mpdStr): ParseResult => {
             urls: [],
         };
         const baseUrl = audioRepresentation.BaseURL;
-        for (const segmentUrl of audioRepresentation.SegmentList.SegmentURL) {
+        const segmentList = audioRepresentation.SegmentList;
+        if (segmentList.Initialization) {
+            track.urls.push(baseUrl + segmentList.Initialization.attr["@_sourceURL"]);
+        }
+        for (const segmentUrl of segmentList.SegmentURL) {
             track.urls.push(baseUrl + segmentUrl.attr["@_media"]);
         }
         result.audioTracks.push(track);
