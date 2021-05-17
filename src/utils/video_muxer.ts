@@ -1,5 +1,5 @@
-const fs = require("fs");
-const path = require("path");
+import * as fs from "fs";
+import * as path from "path";
 import { EventEmitter } from "events";
 import logger from "../core/services/logger";
 import CommandExecuter from "./command_executer";

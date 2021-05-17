@@ -83,7 +83,7 @@ class LiveDownloader {
             this.forceMerge = forceMerge;
         }
         if (cooldown) {
-            console.log(cooldown)
+            console.log(cooldown);
             this.cooldown = cooldown;
         }
     }
@@ -102,7 +102,7 @@ class LiveDownloader {
         if (this.concatMethod) {
             this.logger.warning(`手动指定了合并方式${this.concatMethod} 希望你清楚这么做的效果`);
         }
-        this.workDirectoryName = `kkr_download_${new Date().valueOf()}`;
+        this.workDirectoryName = `kkr_download_${Date.now()}`;
         fs.mkdirSync(this.workDirectoryName);
         fs.mkdirSync(path.resolve(this.workDirectoryName, "./video_download"));
         fs.mkdirSync(path.resolve(this.workDirectoryName, "./audio_download"));
@@ -129,33 +129,29 @@ class LiveDownloader {
         this.outputFilename = escapeFilename(`${connectResult.title}`);
         this.observer.on("new-video-chunks", (urls) => {
             this.unfinishedTasks.push(
-                ...urls.map(
-                    (u: Pick<Task, "id" | "url">): Task => {
-                        return {
-                            url: u.url,
-                            id: u.id,
-                            retry: 0,
-                            type: "video",
-                            outputPath: path.resolve(this.workDirectoryName, `./video_download/${u.id}`),
-                        };
-                    }
-                )
+                ...urls.map((u: Pick<Task, "id" | "url">): Task => {
+                    return {
+                        url: u.url,
+                        id: u.id,
+                        retry: 0,
+                        type: "video",
+                        outputPath: path.resolve(this.workDirectoryName, `./video_download/${u.id}`),
+                    };
+                })
             );
             this.checkQueue();
         });
         this.observer.on("new-audio-chunks", (urls) => {
             this.unfinishedTasks.push(
-                ...urls.map(
-                    (u: Pick<Task, "id" | "url">): Task => {
-                        return {
-                            url: u.url,
-                            id: u.id,
-                            retry: 0,
-                            type: "audio",
-                            outputPath: path.resolve(this.workDirectoryName, `./audio_download/${u.id}`),
-                        };
-                    }
-                )
+                ...urls.map((u: Pick<Task, "id" | "url">): Task => {
+                    return {
+                        url: u.url,
+                        id: u.id,
+                        retry: 0,
+                        type: "audio",
+                        outputPath: path.resolve(this.workDirectoryName, `./audio_download/${u.id}`),
+                    };
+                })
             );
             this.checkQueue();
         });

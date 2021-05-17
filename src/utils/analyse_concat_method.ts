@@ -8,7 +8,7 @@ export enum ConcatMethod {
 }
 
 const analyseConcatMethod = (file1: string, file2: string): Promise<ConcatMethod> => {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve) => {
         let isTimeout = false;
         setTimeout(() => {
             if (!isTimeout) {

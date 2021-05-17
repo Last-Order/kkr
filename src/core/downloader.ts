@@ -1,8 +1,8 @@
-import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as path from "path";
-import YouTubeService from "./services/api/youtube";
+import { EventEmitter } from "events";
 import axios from "axios";
+import YouTubeService from "./services/api/youtube";
 import parseMpd from "./mpd_parser";
 import download from "../utils/download_files";
 import { VideoMuxer, VideoSequence, AudioSequence, VideoTrack, AudioTrack } from "../utils/video_muxer";
@@ -10,9 +10,9 @@ import mergeFiles from "../utils/merge_files";
 import deleteDirectory from "../utils/delete_directory";
 import selectFormat from "../utils/select_format";
 import escapeFilename from "../utils/escape_filename";
-import logger, { ConsoleLogger } from "./services/logger";
 import { isFFmpegAvailable, isFFprobeAvailable } from "../utils/system";
 import analyseConcatMethod, { ConcatMethod } from "../utils/analyse_concat_method";
+import logger, { ConsoleLogger } from "./services/logger";
 
 export class DownloadError extends Error {}
 
@@ -86,7 +86,7 @@ class Downloader extends EventEmitter {
             this.videoUrl
         );
         if (!mpdUrl) {
-            throw new DownloadError("无法获得可用的直播地址");
+            throw new DownloadError("无法获得可用的直播地址 这可能不是一个直播视频");
         }
         this.isLowLatencyLiveStream = isLowLatencyLiveStream;
         this.isPremiumVideo = isPremiumVideo;
@@ -95,7 +95,7 @@ class Downloader extends EventEmitter {
         const mpdStr = (await axios.get(mpdUrl)).data;
         const parseResult = parseMpd(mpdStr);
         // 创建工作目录
-        this.workDirectoryName = `kkr_download_${new Date().valueOf()}`;
+        this.workDirectoryName = `kkr_download_${Date.now()}`;
         fs.mkdirSync(this.workDirectoryName);
         fs.mkdirSync(path.resolve(this.workDirectoryName, "./video_download"));
         fs.mkdirSync(path.resolve(this.workDirectoryName, "./audio_download"));
