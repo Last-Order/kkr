@@ -1,6 +1,7 @@
 import YouTubeObserver from "./services/api/youtube_observer";
 import * as fs from "fs";
 import * as path from "path";
+import axios from 'axios';
 import escapeFilename from "../utils/escape_filename";
 import download from "../utils/download_file";
 import Logger, { ConsoleLogger } from "./services/logger";
@@ -25,7 +26,8 @@ export interface LiveDownloaderOptions {
     threads?: number;
     concatMethod?: ConcatMethod;
     forceMerge?: boolean;
-    cooldown: number;
+    cooldown?: number;
+    headers?: string;
 }
 
 export interface OutputItem {
@@ -49,6 +51,7 @@ class LiveDownloader {
     concatMethod: ConcatMethod;
     forceMerge: boolean = false;
     cooldown: number = 0;
+    headers: Record<string, string> = {};
     stopFlag = false;
     finishFlag = false;
 
@@ -60,12 +63,8 @@ class LiveDownloader {
     isFFprobeAvailable: boolean;
     constructor(
         videoUrl,
-        { format, verbose, keep, threads, concatMethod, forceMerge, cooldown }: Partial<LiveDownloaderOptions>
+        { format, verbose, keep, threads, concatMethod, forceMerge, cooldown, headers }: Partial<LiveDownloaderOptions>
     ) {
-        this.observer = new YouTubeObserver({
-            videoUrl,
-            format,
-        });
         this.logger = Logger;
         if (verbose) {
             this.logger.enableDebug();
@@ -83,9 +82,25 @@ class LiveDownloader {
             this.forceMerge = forceMerge;
         }
         if (cooldown) {
-            console.log(cooldown);
             this.cooldown = cooldown;
         }
+        if (headers) {
+            for (const h of headers.toString().split("\n")) {
+                const header = h.split(":");
+                if (header.length < 2) {
+                    throw new Error(`HTTP Headers invalid.`);
+                }
+                this.headers[header[0]] = header.slice(1).join(":");
+            }
+            axios.defaults.headers.common = {
+                ...axios.defaults.headers.common,
+                ...this.headers,
+            }
+        }
+        this.observer = new YouTubeObserver({
+            videoUrl,
+            format,
+        });
     }
 
     async start() {

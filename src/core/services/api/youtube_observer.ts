@@ -17,6 +17,11 @@ export interface ConnectResult {
     isPremiumVideo: boolean;
 }
 
+export interface YouTubeObserverParams {
+    videoUrl: string;
+    format: string;
+}
+
 class YouTubeObserver extends EventEmitter {
     videoUrl: string;
     mpdUrl: string;
@@ -27,7 +32,7 @@ class YouTubeObserver extends EventEmitter {
     mpdUrlFetchTimer: NodeJS.Timeout;
     audioUrlFlags: boolean[] = [];
     videoUrlFlags: boolean[] = [];
-    constructor({ videoUrl, format }) {
+    constructor({ videoUrl, format }: YouTubeObserverParams) {
         super();
         this.videoUrl = videoUrl;
         if (format) {

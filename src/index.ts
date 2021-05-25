@@ -77,6 +77,16 @@ Erii.addOption({
 });
 
 Erii.addOption({
+    name: ["headers"],
+    command: "download",
+    description: "Custom HTTP headers",
+    argument: {
+        name: "headers",
+        description: '(Optional) Custom HTTP headers. Multi headers should be splitted with "\\n"',
+    },
+});
+
+Erii.addOption({
     name: ["verbose", "debug"],
     description: "Debug output",
 });

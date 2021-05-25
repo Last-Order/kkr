@@ -23,6 +23,7 @@ export interface DownloaderOptions {
     keep?: boolean;
     threads?: number;
     concatMethod?: ConcatMethod;
+    headers?: string;
 }
 
 class Downloader extends EventEmitter {
@@ -39,6 +40,8 @@ class Downloader extends EventEmitter {
     verbose: boolean = false;
     logger: ConsoleLogger;
     maxThreads = 10;
+    rawHeaders: string;
+    enableCustomHeaders = false;
     concatMethod: ConcatMethod;
     sqStart: number;
     sqEnd: number;
@@ -48,7 +51,7 @@ class Downloader extends EventEmitter {
     isFFmpegAvailable: boolean;
     isFFprobeAvailable: boolean;
 
-    constructor(videoUrl, { format, verbose, keep, threads, concatMethod }: Partial<DownloaderOptions>) {
+    constructor(videoUrl, { format, verbose, keep, threads, concatMethod, headers }: Partial<DownloaderOptions>) {
         super();
         this.videoUrl = videoUrl;
         if (format) {
@@ -66,6 +69,10 @@ class Downloader extends EventEmitter {
         }
         if (concatMethod) {
             this.concatMethod = +concatMethod;
+        }
+        if (headers) {
+            this.enableCustomHeaders = true;
+            this.rawHeaders = headers;
         }
     }
 
@@ -104,9 +111,11 @@ class Downloader extends EventEmitter {
         this.audioChunkUrls = selectedAudioTrack.urls;
         await download(this.videoChunkUrls, path.resolve(this.workDirectoryName, "./video_download"), this.maxThreads, {
             verbose: this.verbose,
+            ...(this.enableCustomHeaders ? { headers: this.rawHeaders } : {}),
         });
         await download(this.audioChunkUrls, path.resolve(this.workDirectoryName, "./audio_download"), this.maxThreads, {
             verbose: this.verbose,
+            ...(this.enableCustomHeaders ? { headers: this.rawHeaders } : {}),
         });
         this.downloadedVideoChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, "./video_download"));
         this.downloadedAudioChunkFiles = fs.readdirSync(path.resolve(this.workDirectoryName, "./audio_download"));
