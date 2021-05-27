@@ -1,10 +1,10 @@
-import YouTubeObserver from "./services/api/youtube_observer";
 import * as fs from "fs";
 import * as path from "path";
-import axios from 'axios';
+import axios from "axios";
 import escapeFilename from "../utils/escape_filename";
 import download from "../utils/download_file";
 import Logger, { ConsoleLogger } from "./services/logger";
+import YouTubeObserver from "./services/api/youtube_observer";
 import { VideoMuxer, VideoTrack, AudioTrack, VideoSequence, AudioSequence } from "../utils/video_muxer";
 import deleteDirectory from "../utils/delete_directory";
 import { isFFmpegAvailable, isFFprobeAvailable } from "../utils/system";
@@ -95,7 +95,7 @@ class LiveDownloader {
             axios.defaults.headers.common = {
                 ...axios.defaults.headers.common,
                 ...this.headers,
-            }
+            };
         }
         this.observer = new YouTubeObserver({
             videoUrl,
