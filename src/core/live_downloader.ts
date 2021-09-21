@@ -379,6 +379,7 @@ class LiveDownloader {
                 } catch (e) {
                     this.logger.debug(e);
                     this.logger.error(`混流第 ${i + 1} 个输出文件失败`);
+                    this.keepTemporaryFiles = true;
                 }
             }
         }
