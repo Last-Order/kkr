@@ -2,6 +2,7 @@ import axios from "axios";
 import * as ErrorMessages from "../../messages/error";
 
 export class ParseError extends Error {}
+export class VideoPlayabilityStatusError extends Error {}
 class YouTubeService {
     static getVideoIdByUrl(videoUrl: string) {
         let videoId;
@@ -42,6 +43,12 @@ class YouTubeService {
         }
         const title = playerResponse?.videoDetails?.title as string;
         if (!playerResponse.streamingData) {
+            const errorReason =
+                playerResponse?.playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.subreason?.simpleText ||
+                playerResponse?.playabilityStatus?.errorScreen?.playerErrorMessageRenderer?.subreason?.runs?.[0]?.text;
+            if (errorReason) {
+                throw new VideoPlayabilityStatusError(errorReason);
+            }
             throw new ParseError(ErrorMessages.NOT_A_LIVE_STREAM);
         }
         const mpdUrl = playerResponse.streamingData.dashManifestUrl as string;
