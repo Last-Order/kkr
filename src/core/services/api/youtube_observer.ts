@@ -27,7 +27,7 @@ class YouTubeObserver extends EventEmitter {
     mpdUrl: string;
     format: string;
 
-    playlistFetchInterval: number = 5000;
+    playlistFetchInterval: number = 3500;
     playlistFetchTimer: NodeJS.Timeout;
     mpdUrlFetchTimer: NodeJS.Timeout;
     audioUrlFlags: boolean[] = [];
@@ -72,11 +72,7 @@ class YouTubeObserver extends EventEmitter {
                 } = await YouTubeService.getVideoInfo(this.videoUrl);
                 this.mpdUrl = mpdUrl;
                 if (isLowLatencyLiveStream) {
-                    if (latencyClass.endsWith("ULTRA_LOW")) {
-                        this.playlistFetchInterval = 2000;
-                    } else {
-                        this.playlistFetchInterval = 4000;
-                    }
+                    this.playlistFetchInterval = 2000;
                 }
                 this.cycling();
                 return {
