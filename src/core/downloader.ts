@@ -95,6 +95,7 @@ class Downloader extends EventEmitter {
         if (!mpdUrl) {
             throw new DownloadError("无法获得可用的直播地址 这可能不是一个直播视频");
         }
+        this.logger.debug(`MPD URL: ${mpdUrl}`);
         this.isLowLatencyLiveStream = isLowLatencyLiveStream;
         this.isPremiumVideo = isPremiumVideo;
         this.outputFilename = escapeFilename(`${title}.mp4`);

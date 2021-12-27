@@ -137,6 +137,7 @@ class LiveDownloader {
         this.logger.info(
             `是否启用DVR: ${connectResult.isLiveDvrEnabled}; 低延迟视频: ${connectResult.isLowLatencyLiveStream}; 视频延迟模式: ${connectResult.latencyClass}; 是否为首播: ${connectResult.isPremiumVideo}`
         );
+        this.logger.debug(`MPD URL: ${connectResult.mpdUrl}`);
         this.isLiveDvrEnabled = connectResult.isLiveDvrEnabled;
         this.isLowLatencyLiveStream = connectResult.isLowLatencyLiveStream;
         this.latencyClass = connectResult.latencyClass;
